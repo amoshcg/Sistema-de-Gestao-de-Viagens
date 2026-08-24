@@ -1,7 +1,7 @@
 # Sistema de Gestão de Viagens (SGV)
 
 Aplicação web conteinerizada para gestão de viagens corporativas.
-Arquitetura em três camadas separadas, conforme a Seção 9 da Especificação de Requisitos:
+Arquitetura em três camadas separadas:
 
 | Camada        | Tecnologia            | Porta |
 |---------------|-----------------------|-------|
