@@ -9,25 +9,6 @@ Arquitetura em três camadas separadas:
 | Backend       | Spring Boot 3 (Java 21) | 8080 |
 | Banco de dados| PostgreSQL 15         | 5432  |
 
-## Escopo desta branch (`feature/planejar-viagem`)
-
-Módulo de Planejamento de Viagens (RF#1), com as duas funcionalidades iniciais:
-
-- **Cadastro de viagem** (RF-CAD-001) — formulário com destino, período, motivo, meio de transporte e responsável.
-- **Listagem de viagens** (RF-CON-002) — tabela ordenada das viagens mais recentes para as mais antigas.
-
-Regras de negócio implementadas:
-
-| Regra      | Descrição                                                     | Onde |
-|------------|---------------------------------------------------------------|------|
-| RN-CAD-001 | Toda viagem possui um responsável, definido na criação          | `Viagem` (coluna `updatable = false`) |
-| RN-CAD-002 | Toda viagem é criada na situação `Rascunho`                     | `Viagem` (construtor) |
-| RN-CAD-003 | Destino, datas, motivo e meio de transporte são obrigatórios    | `ViagemRequest` + `ViagemForm.jsx` |
-| RN-CAD-004 | Data de retorno ≥ data de saída                                 | `ViagemRequest.isPeriodoValido()` + `ViagemForm.jsx` + `CHECK` no banco |
-| RN-CON-002 | A listagem exibe destino, período, situação e responsável       | `ViagemResponse` / `ViagemList.jsx` |
-
-Conforme RNF-ALT-001, as validações são aplicadas **no frontend e no backend**.
-
 ## Como executar
 
 ### Com Docker (forma recomendada)
@@ -119,12 +100,3 @@ frontend/
   nginx.conf         # serve o build e faz proxy de /api para o backend
 docker-compose.yml
 ```
-
-## Próximos passos (fora do escopo desta entrega)
-
-- Filtros de pesquisa por destino, período e situação (RN-CON-001)
-- Alteração e exclusão de viagens em rascunho (RF-ALT-001 / RF-ALT-002)
-- Submissão para análise (RF-SUB-001) e histórico de situações
-- Autenticação: hoje o responsável é informado no formulário, pois o módulo de
-  usuários ainda não existe. Quando houver autenticação, ele passa a vir do
-  usuário logado, como pede a RN-CAD-001.
