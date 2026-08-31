@@ -7,11 +7,10 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 
 /**
- * Dados de entrada do cadastro de viagem (RF-CAD-001).
- * RN-CAD-003: destino, data de saida, data de retorno, motivo e meio de transporte sao obrigatorios.
- * RN-CAD-001: o empregado responsavel vem do cadastro de Empregados.
+ * Dados de entrada da alteracao de viagem (RF-ALT-001).
+ * O empregado e o numero da viagem sao imutaveis (RN-CAD-001) e por isso nao aparecem aqui.
  */
-public record ViagemRequest(
+public record ViagemEdicaoRequest(
 
         @NotBlank(message = "O destino e obrigatorio")
         @Size(max = 120, message = "O destino deve ter no maximo 120 caracteres")
@@ -28,17 +27,14 @@ public record ViagemRequest(
         String motivo,
 
         @NotNull(message = "O meio de transporte e obrigatorio")
-        Long meioTransporteId,
-
-        @NotNull(message = "O empregado e obrigatorio")
-        Long empregadoId
+        Long meioTransporteId
 ) {
 
-    /** RN-CAD-004: a data de retorno deve ser igual ou posterior a data de saida. */
+    /** RN-CAD-004: reaplicada a cada alteracao (RF-ALT-001). */
     @AssertTrue(message = "A data de retorno deve ser igual ou posterior a data de saida")
     public boolean isPeriodoValido() {
         if (dataSaida == null || dataRetorno == null) {
-            return true; // ausencia de data ja e reportada pelo @NotNull
+            return true;
         }
         return !dataRetorno.isBefore(dataSaida);
     }

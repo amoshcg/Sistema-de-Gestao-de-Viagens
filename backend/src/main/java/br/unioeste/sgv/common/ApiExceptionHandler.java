@@ -24,18 +24,28 @@ public class ApiExceptionHandler {
         for (FieldError erro : ex.getBindingResult().getFieldErrors()) {
             erros.putIfAbsent(erro.getField(), erro.getDefaultMessage());
         }
-        return ResponseEntity.badRequest().body(corpo("Dados invalidos", erros));
+        return ResponseEntity.badRequest().body(corpo(HttpStatus.BAD_REQUEST, "Dados invalidos", erros));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, Object>> tratarCorpoInvalido(HttpMessageNotReadableException ex) {
-        return ResponseEntity.badRequest().body(corpo("Requisicao invalida", Map.of()));
+        return ResponseEntity.badRequest().body(corpo(HttpStatus.BAD_REQUEST, "Requisicao invalida", Map.of()));
     }
 
-    private Map<String, Object> corpo(String mensagem, Map<String, String> erros) {
+    @ExceptionHandler(RecursoNaoEncontradoException.class)
+    public ResponseEntity<Map<String, Object>> tratarNaoEncontrado(RecursoNaoEncontradoException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(corpo(HttpStatus.NOT_FOUND, ex.getMessage(), Map.of()));
+    }
+
+    @ExceptionHandler(ConflitoException.class)
+    public ResponseEntity<Map<String, Object>> tratarConflito(ConflitoException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(corpo(HttpStatus.CONFLICT, ex.getMessage(), Map.of()));
+    }
+
+    private Map<String, Object> corpo(HttpStatus status, String mensagem, Map<String, String> erros) {
         Map<String, Object> corpo = new LinkedHashMap<>();
         corpo.put("timestamp", OffsetDateTime.now().toString());
-        corpo.put("status", HttpStatus.BAD_REQUEST.value());
+        corpo.put("status", status.value());
         corpo.put("mensagem", mensagem);
         corpo.put("erros", erros);
         return corpo;
