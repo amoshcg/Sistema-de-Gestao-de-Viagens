@@ -1,34 +1,39 @@
-import { useState } from 'react';
-import { cadastrarViagem } from '../api.js';
-
-const MEIOS_TRANSPORTE = [
-  { valor: 'AEREO', rotulo: 'Aéreo' },
-  { valor: 'RODOVIARIO', rotulo: 'Rodoviário' },
-  { valor: 'VEICULO_PROPRIO', rotulo: 'Veículo próprio' },
-];
+import { useEffect, useState } from 'react';
+import { cadastrarViagem, alterarViagem } from '../api.js';
 
 const FORM_VAZIO = {
   destino: '',
   dataSaida: '',
   dataRetorno: '',
   motivo: '',
-  meioTransporte: '',
-  responsavel: '',
+  meioTransporteId: '',
+  empregadoId: '',
 };
+
+function formularioDaViagem(viagem) {
+  return {
+    destino: viagem.destino,
+    dataSaida: viagem.dataSaida,
+    dataRetorno: viagem.dataRetorno,
+    motivo: viagem.motivo,
+    meioTransporteId: String(viagem.meioTransporteId),
+    empregadoId: String(viagem.empregadoId),
+  };
+}
 
 /**
  * RNF-ALT-001: as validações de campos obrigatórios (RN-CAD-003) e de
  * consistência do período (RN-CAD-004) são aplicadas aqui e também no backend.
  */
-function validar(form) {
+function validar(form, exigirEmpregado) {
   const erros = {};
 
   if (!form.destino.trim()) erros.destino = 'O destino é obrigatório';
   if (!form.dataSaida) erros.dataSaida = 'A data de saída é obrigatória';
   if (!form.dataRetorno) erros.dataRetorno = 'A data de retorno é obrigatória';
   if (!form.motivo.trim()) erros.motivo = 'O motivo é obrigatório';
-  if (!form.meioTransporte) erros.meioTransporte = 'O meio de transporte é obrigatório';
-  if (!form.responsavel.trim()) erros.responsavel = 'O responsável é obrigatório';
+  if (!form.meioTransporteId) erros.meioTransporteId = 'O meio de transporte é obrigatório';
+  if (exigirEmpregado && !form.empregadoId) erros.empregadoId = 'O empregado é obrigatório';
 
   if (form.dataSaida && form.dataRetorno && form.dataRetorno < form.dataSaida) {
     erros.dataRetorno = 'A data de retorno deve ser igual ou posterior à data de saída';
@@ -37,12 +42,20 @@ function validar(form) {
   return erros;
 }
 
-export default function ViagemForm({ aoCadastrar }) {
-  const [form, setForm] = useState(FORM_VAZIO);
+export default function ViagemForm({ empregados, meiosTransporte, viagemEditando, aoSalvar, aoCancelarEdicao }) {
+  const editando = Boolean(viagemEditando);
+  const [form, setForm] = useState(editando ? formularioDaViagem(viagemEditando) : FORM_VAZIO);
   const [erros, setErros] = useState({});
   const [enviando, setEnviando] = useState(false);
   const [sucesso, setSucesso] = useState(null);
   const [falha, setFalha] = useState(null);
+
+  useEffect(() => {
+    setForm(editando ? formularioDaViagem(viagemEditando) : FORM_VAZIO);
+    setErros({});
+    setSucesso(null);
+    setFalha(null);
+  }, [viagemEditando]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function alterarCampo(evento) {
     const { name, value } = evento.target;
@@ -56,7 +69,7 @@ export default function ViagemForm({ aoCadastrar }) {
     setFalha(null);
     setSucesso(null);
 
-    const errosLocais = validar(form);
+    const errosLocais = validar(form, !editando);
     if (Object.keys(errosLocais).length > 0) {
       setErros(errosLocais);
       return;
@@ -64,11 +77,25 @@ export default function ViagemForm({ aoCadastrar }) {
 
     setEnviando(true);
     try {
-      const viagem = await cadastrarViagem(form);
-      setForm(FORM_VAZIO);
-      setErros({});
-      setSucesso(`Viagem para ${viagem.destino} cadastrada como rascunho.`);
-      aoCadastrar();
+      if (editando) {
+        const { empregadoId, ...dados } = form; // RN-CAD-001: empregado é imutável após a criação
+        const viagem = await alterarViagem(viagemEditando.id, {
+          ...dados,
+          meioTransporteId: Number(dados.meioTransporteId),
+        });
+        setSucesso(`Viagem nº ${viagem.numero} atualizada.`);
+        aoSalvar();
+      } else {
+        const viagem = await cadastrarViagem({
+          ...form,
+          meioTransporteId: Number(form.meioTransporteId),
+          empregadoId: Number(form.empregadoId),
+        });
+        setForm(FORM_VAZIO);
+        setErros({});
+        setSucesso(`Viagem nº ${viagem.numero} para ${viagem.destino} cadastrada como rascunho.`);
+        aoSalvar();
+      }
     } catch (e) {
       // O backend devolve os erros por campo; "periodoValido" refere-se à RN-CAD-004.
       const { periodoValido, ...porCampo } = e.erros ?? {};
@@ -82,7 +109,7 @@ export default function ViagemForm({ aoCadastrar }) {
 
   return (
     <section className="cartao">
-      <h2>Cadastrar viagem</h2>
+      <h2>{editando ? `Editar viagem nº ${viagemEditando.numero}` : 'Cadastrar viagem'}</h2>
 
       <form onSubmit={enviar} noValidate>
         <div className="campo">
@@ -141,41 +168,61 @@ export default function ViagemForm({ aoCadastrar }) {
 
         <div className="linha">
           <div className="campo">
-            <label htmlFor="meioTransporte">Meio de transporte *</label>
+            <label htmlFor="meioTransporteId">Meio de transporte *</label>
             <select
-              id="meioTransporte"
-              name="meioTransporte"
-              value={form.meioTransporte}
+              id="meioTransporteId"
+              name="meioTransporteId"
+              value={form.meioTransporteId}
               onChange={alterarCampo}
             >
               <option value="">Selecione...</option>
-              {MEIOS_TRANSPORTE.map((meio) => (
-                <option key={meio.valor} value={meio.valor}>
-                  {meio.rotulo}
+              {meiosTransporte.map((meio) => (
+                <option key={meio.id} value={meio.id}>
+                  {meio.descricao}
                 </option>
               ))}
             </select>
-            {erros.meioTransporte && <span className="erro">{erros.meioTransporte}</span>}
+            {erros.meioTransporteId && <span className="erro">{erros.meioTransporteId}</span>}
           </div>
 
           <div className="campo">
-            <label htmlFor="responsavel">Responsável *</label>
-            <input
-              id="responsavel"
-              name="responsavel"
-              type="text"
-              maxLength={120}
-              value={form.responsavel}
-              onChange={alterarCampo}
-              placeholder="Ex.: Carlos Penteado"
-            />
-            {erros.responsavel && <span className="erro">{erros.responsavel}</span>}
+            <label htmlFor="empregadoId">Empregado *</label>
+            {editando ? (
+              <input
+                id="empregadoId"
+                type="text"
+                disabled
+                value={`${viagemEditando.empregadoNome} (${viagemEditando.empregadoMatricula})`}
+              />
+            ) : (
+              <select
+                id="empregadoId"
+                name="empregadoId"
+                value={form.empregadoId}
+                onChange={alterarCampo}
+              >
+                <option value="">Selecione...</option>
+                {empregados.map((empregado) => (
+                  <option key={empregado.id} value={empregado.id}>
+                    {empregado.nome} — {empregado.matricula} ({empregado.areaNome})
+                  </option>
+                ))}
+              </select>
+            )}
+            {erros.empregadoId && <span className="erro">{erros.empregadoId}</span>}
           </div>
         </div>
 
-        <button type="submit" disabled={enviando}>
-          {enviando ? 'Salvando...' : 'Cadastrar viagem'}
-        </button>
+        <div className="acoes-form">
+          <button type="submit" disabled={enviando}>
+            {enviando ? 'Salvando...' : editando ? 'Salvar alterações' : 'Cadastrar viagem'}
+          </button>
+          {editando && (
+            <button type="button" className="botao-secundario" onClick={aoCancelarEdicao} disabled={enviando}>
+              Cancelar
+            </button>
+          )}
+        </div>
 
         {sucesso && <p className="aviso sucesso">{sucesso}</p>}
         {falha && <p className="aviso falha">{falha}</p>}
