@@ -12,3 +12,6 @@ frontend/dist/
 .DS_Store
 Thumbs.db
 backend/data/
+
+# Enviroment
+.env
