@@ -49,6 +49,46 @@ export async function submeterViagem(id) {
   return tratarResposta(resposta, 'Não foi possível submeter a viagem para análise.');
 }
 
+export async function cancelarViagem(id) {
+  const resposta = await fetch(`${BASE_URL}/viagens/${id}/cancelamento`, { method: 'POST' });
+  return tratarResposta(resposta, 'Não foi possível cancelar a viagem.');
+}
+
+export async function aprovarViagem(id, dados) {
+  const resposta = await fetch(`${BASE_URL}/viagens/${id}/aprovacao`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(dados),
+  });
+  return tratarResposta(resposta, 'Não foi possível aprovar a viagem.');
+}
+
+export async function rejeitarViagem(id, dados) {
+  const resposta = await fetch(`${BASE_URL}/viagens/${id}/rejeicao`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(dados),
+  });
+  return tratarResposta(resposta, 'Não foi possível rejeitar a viagem.');
+}
+
+export async function solicitarAjusteViagem(id, dados) {
+  const resposta = await fetch(`${BASE_URL}/viagens/${id}/ajuste`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(dados),
+  });
+  return tratarResposta(resposta, 'Não foi possível solicitar o ajuste da viagem.');
+}
+
+export async function buscarHistoricoViagem(id) {
+  const resposta = await fetch(`${BASE_URL}/viagens/${id}/historico`);
+  if (!resposta.ok) {
+    throw new Error('Não foi possível carregar o histórico da viagem.');
+  }
+  return resposta.json();
+}
+
 export async function listarEmpregados() {
   const resposta = await fetch(`${BASE_URL}/empregados`);
   if (!resposta.ok) {
@@ -64,6 +104,15 @@ export async function cadastrarEmpregado(empregado) {
     body: JSON.stringify(empregado),
   });
   return tratarResposta(resposta, 'Não foi possível cadastrar o empregado.');
+}
+
+export async function alterarEmpregado(id, empregado) {
+  const resposta = await fetch(`${BASE_URL}/empregados/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(empregado),
+  });
+  return tratarResposta(resposta, 'Não foi possível alterar o empregado.');
 }
 
 export async function listarAreas() {
@@ -89,4 +138,38 @@ export async function listarMeiosTransporte() {
     throw new Error('Não foi possível carregar os meios de transporte.');
   }
   return resposta.json();
+}
+
+export async function listarCargos() {
+  const resposta = await fetch(`${BASE_URL}/cargos`);
+  if (!resposta.ok) {
+    throw new Error('Não foi possível carregar os cargos.');
+  }
+  return resposta.json();
+}
+
+export async function cadastrarCargo(cargo) {
+  const resposta = await fetch(`${BASE_URL}/cargos`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(cargo),
+  });
+  return tratarResposta(resposta, 'Não foi possível cadastrar o cargo.');
+}
+
+export async function listarStatusViagem() {
+  const resposta = await fetch(`${BASE_URL}/status-viagem`);
+  if (!resposta.ok) {
+    throw new Error('Não foi possível carregar os status de viagem.');
+  }
+  return resposta.json();
+}
+
+export async function cadastrarStatusViagem(status) {
+  const resposta = await fetch(`${BASE_URL}/status-viagem`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(status),
+  });
+  return tratarResposta(resposta, 'Não foi possível cadastrar o status de viagem.');
 }

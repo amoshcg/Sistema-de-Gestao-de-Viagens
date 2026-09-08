@@ -309,6 +309,38 @@ th {
   color: var(--vermelho);
 }
 
+.situacao-ajuste-solicitado {
+  background: #fff8e1;
+  color: #ef6c00;
+}
+
+.situacao-cancelada {
+  background: #f5f5f5;
+  color: #757575;
+}
+
+.acao-gestor {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.acao-gestor select,
+.acao-gestor textarea {
+  flex: 1 1 200px;
+}
+
+.historico-viagem {
+  padding: 0.5rem 0;
+}
+
+.historico-viagem ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
 @media (max-width: 600px) {
   .linha {
     grid-template-columns: 1fr;

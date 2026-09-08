@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import ViagemForm from '../components/ViagemForm.jsx';
 import ViagemList from '../components/ViagemList.jsx';
 import { listarViagens, listarEmpregados, listarMeiosTransporte } from '../api.js';
@@ -12,6 +12,11 @@ export default function ViagensPage() {
   const [meiosTransporte, setMeiosTransporte] = useState([]);
 
   const [viagemEditando, setViagemEditando] = useState(null);
+
+  const gestores = useMemo(
+    () => empregados.filter((empregado) => empregado.cargoNome === 'Gestor'),
+    [empregados]
+  );
 
   const carregarViagens = useCallback(async () => {
     setCarregandoViagens(true);
@@ -48,6 +53,7 @@ export default function ViagensPage() {
 
       <ViagemList
         viagens={viagens}
+        gestores={gestores}
         carregando={carregandoViagens}
         erro={erroViagens}
         aoAlterar={carregarViagens}

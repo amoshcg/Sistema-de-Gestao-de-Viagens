@@ -9,10 +9,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import br.unioeste.sgv.area.Area;
 import br.unioeste.sgv.area.AreaRepository;
+import br.unioeste.sgv.cargo.Cargo;
+import br.unioeste.sgv.cargo.CargoRepository;
 import br.unioeste.sgv.empregado.Empregado;
 import br.unioeste.sgv.empregado.EmpregadoRepository;
 import br.unioeste.sgv.meiotransporte.MeioTransporte;
 import br.unioeste.sgv.meiotransporte.MeioTransporteRepository;
+import br.unioeste.sgv.statusviagem.StatusViagem;
+import br.unioeste.sgv.statusviagem.StatusViagemRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,31 +44,50 @@ class ViagemControllerTest {
     private ViagemRepository repository;
 
     @Autowired
+    private ViagemStatusHistoricoRepository historicoRepository;
+
+    @Autowired
     private EmpregadoRepository empregadoRepository;
 
     @Autowired
     private AreaRepository areaRepository;
 
     @Autowired
+    private CargoRepository cargoRepository;
+
+    @Autowired
     private MeioTransporteRepository meioTransporteRepository;
+
+    @Autowired
+    private StatusViagemRepository statusViagemRepository;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private Long empregadoId;
+    private Long gestorId;
     private Long meioTransporteId;
     private Long outroMeioTransporteId;
 
     @BeforeEach
     void limparBase() {
+        historicoRepository.deleteAll();
         repository.deleteAll();
         empregadoRepository.deleteAll();
         areaRepository.deleteAll();
+        cargoRepository.deleteAll();
         meioTransporteRepository.deleteAll();
+        statusViagemRepository.deleteAll();
 
         Area area = areaRepository.save(new Area("Comercial"));
-        empregadoId = empregadoRepository.save(new Empregado("E001", "Carlos Penteado", area)).getId();
+        Cargo colaborador = cargoRepository.save(new Cargo("Colaborador"));
+        Cargo gestor = cargoRepository.save(new Cargo("Gestor"));
+        empregadoId = empregadoRepository.save(new Empregado("E001", "Carlos Penteado", area, colaborador)).getId();
+        gestorId = empregadoRepository.save(new Empregado("E002", "Marcia Ribeiro", area, gestor)).getId();
         meioTransporteId = meioTransporteRepository.save(new MeioTransporte("Aereo")).getId();
         outroMeioTransporteId = meioTransporteRepository.save(new MeioTransporte("Rodoviario")).getId();
+        for (String descricao : new String[] {"Rascunho", "Solicitada", "Aprovada", "Rejeitada", "Ajuste solicitado", "Cancelada"}) {
+            statusViagemRepository.save(new StatusViagem(descricao));
+        }
     }
 
     private String json(String destino, String saida, String retorno, String motivo,
@@ -93,6 +116,18 @@ class ViagemControllerTest {
                 """.formatted(destino, saida, retorno, motivo, meioTransporteId);
     }
 
+    private String jsonGestor(Long gestorId) {
+        return """
+                {"gestorId": %s}
+                """.formatted(gestorId);
+    }
+
+    private String jsonGestorJustificativa(Long gestorId, String justificativa) {
+        return """
+                {"gestorId": %s, "justificativa": "%s"}
+                """.formatted(gestorId, justificativa);
+    }
+
     private Long cadastrarViagem(String destino, String saida, String retorno, String motivo) throws Exception {
         MvcResult resultado = mockMvc.perform(post("/api/viagens")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -114,12 +149,14 @@ class ViagemControllerTest {
                 .andExpect(jsonPath("$.id").isNumber())
                 .andExpect(jsonPath("$.numero").isNumber())
                 .andExpect(jsonPath("$.destino").value("Curitiba"))
-                .andExpect(jsonPath("$.situacao").value("RASCUNHO"))
+                .andExpect(jsonPath("$.situacaoDescricao").value("Rascunho"))
                 .andExpect(jsonPath("$.meioTransporteId").value(meioTransporteId))
                 .andExpect(jsonPath("$.meioTransporteDescricao").value("Aereo"))
                 .andExpect(jsonPath("$.empregadoId").value(empregadoId))
                 .andExpect(jsonPath("$.empregadoNome").value("Carlos Penteado"))
-                .andExpect(jsonPath("$.empregadoAreaNome").value("Comercial"));
+                .andExpect(jsonPath("$.empregadoAreaNome").value("Comercial"))
+                .andExpect(jsonPath("$.areaSolicitanteNome").value("Comercial"))
+                .andExpect(jsonPath("$.cargoSolicitanteNome").value("Colaborador"));
     }
 
     @Test
@@ -234,7 +271,7 @@ class ViagemControllerTest {
     }
 
     @Test
-    @DisplayName("RN-ALT-001: viagem fora de Rascunho nao pode ser alterada")
+    @DisplayName("RN-ALT-001: viagem fora de Rascunho/Ajuste nao pode ser alterada")
     void naoAlteraViagemForaDeRascunho() throws Exception {
         Long id = cadastrarViagem("Cascavel", "2026-09-01", "2026-09-03", "Treinamento");
         mockMvc.perform(post("/api/viagens/{id}/submissao", id)).andExpect(status().isOk());
@@ -275,7 +312,7 @@ class ViagemControllerTest {
 
         mockMvc.perform(post("/api/viagens/{id}/submissao", id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.situacao").value("SOLICITADA"));
+                .andExpect(jsonPath("$.situacaoDescricao").value("Solicitada"));
     }
 
     @Test
@@ -286,5 +323,155 @@ class ViagemControllerTest {
 
         mockMvc.perform(post("/api/viagens/{id}/submissao", id))
                 .andExpect(status().isConflict());
+    }
+
+    @Test
+    @DisplayName("Viagem em Rascunho pode ser cancelada, encerrando o fluxo")
+    void cancelaViagemEmRascunho() throws Exception {
+        Long id = cadastrarViagem("Umuarama", "2026-09-01", "2026-09-03", "Treinamento");
+
+        mockMvc.perform(post("/api/viagens/{id}/cancelamento", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.situacaoDescricao").value("Cancelada"));
+    }
+
+    @Test
+    @DisplayName("Viagem Solicitada nao pode ser cancelada diretamente")
+    void naoCancelaViagemSolicitada() throws Exception {
+        Long id = cadastrarViagem("Apucarana", "2026-09-01", "2026-09-03", "Treinamento");
+        mockMvc.perform(post("/api/viagens/{id}/submissao", id)).andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/viagens/{id}/cancelamento", id))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    @DisplayName("Gestor aprova viagem Solicitada, encerrando o fluxo")
+    void aprovaViagemSolicitada() throws Exception {
+        Long id = cadastrarViagem("Curitiba", "2026-09-01", "2026-09-03", "Treinamento");
+        mockMvc.perform(post("/api/viagens/{id}/submissao", id)).andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/viagens/{id}/aprovacao", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonGestor(gestorId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.situacaoDescricao").value("Aprovada"));
+    }
+
+    @Test
+    @DisplayName("Viagem em Rascunho nao pode ser aprovada")
+    void naoAprovaViagemForaDeSolicitada() throws Exception {
+        Long id = cadastrarViagem("Cianorte", "2026-09-01", "2026-09-03", "Treinamento");
+
+        mockMvc.perform(post("/api/viagens/{id}/aprovacao", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonGestor(gestorId)))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    @DisplayName("Empregado sem cargo Gestor nao pode aprovar viagem")
+    void naoAprovaComGestorInvalido() throws Exception {
+        Long id = cadastrarViagem("Sarandi", "2026-09-01", "2026-09-03", "Treinamento");
+        mockMvc.perform(post("/api/viagens/{id}/submissao", id)).andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/viagens/{id}/aprovacao", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonGestor(empregadoId)))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    @DisplayName("Aprovar com gestor inexistente retorna 404")
+    void naoAprovaComGestorInexistente() throws Exception {
+        Long id = cadastrarViagem("Paranavai", "2026-09-01", "2026-09-03", "Treinamento");
+        mockMvc.perform(post("/api/viagens/{id}/submissao", id)).andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/viagens/{id}/aprovacao", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonGestor(999999L)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Gestor rejeita viagem Solicitada, encerrando o fluxo")
+    void rejeitaViagemSolicitada() throws Exception {
+        Long id = cadastrarViagem("Campo Mourao", "2026-09-01", "2026-09-03", "Treinamento");
+        mockMvc.perform(post("/api/viagens/{id}/submissao", id)).andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/viagens/{id}/rejeicao", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonGestorJustificativa(gestorId, "Fora do orcamento do trimestre")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.situacaoDescricao").value("Rejeitada"));
+    }
+
+    @Test
+    @DisplayName("Rejeitar sem justificativa retorna 400")
+    void rejeitaSemJustificativaRetorna400() throws Exception {
+        Long id = cadastrarViagem("Ivaipora", "2026-09-01", "2026-09-03", "Treinamento");
+        mockMvc.perform(post("/api/viagens/{id}/submissao", id)).andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/viagens/{id}/rejeicao", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonGestorJustificativa(gestorId, "")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erros.justificativa").exists());
+    }
+
+    @Test
+    @DisplayName("Gestor solicita ajuste; viagem volta a ser editavel e pode ser reenviada")
+    void solicitaAjusteEReenvia() throws Exception {
+        Long id = cadastrarViagem("Telemaco Borba", "2026-09-01", "2026-09-03", "Treinamento");
+        mockMvc.perform(post("/api/viagens/{id}/submissao", id)).andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/viagens/{id}/ajuste", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonGestorJustificativa(gestorId, "Detalhar melhor o motivo da viagem")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.situacaoDescricao").value("Ajuste solicitado"));
+
+        mockMvc.perform(put("/api/viagens/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonEdicao("Telemaco Borba - Fabrica", "2026-09-01", "2026-09-03",
+                                "Visita tecnica a fabrica de papel", meioTransporteId)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/viagens/{id}/submissao", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.situacaoDescricao").value("Solicitada"));
+
+        mockMvc.perform(get("/api/viagens/{id}/historico", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(4))
+                .andExpect(jsonPath("$[0].situacaoDescricao").value("Rascunho"))
+                .andExpect(jsonPath("$[1].situacaoDescricao").value("Solicitada"))
+                .andExpect(jsonPath("$[2].situacaoDescricao").value("Ajuste solicitado"))
+                .andExpect(jsonPath("$[2].justificativa").value("Detalhar melhor o motivo da viagem"))
+                .andExpect(jsonPath("$[2].responsavelId").value(gestorId))
+                .andExpect(jsonPath("$[3].situacaoDescricao").value("Solicitada"))
+                .andExpect(jsonPath("$[3].responsavelId").value(empregadoId));
+    }
+
+    @Test
+    @DisplayName("Viagem com ajuste solicitado pode ser cancelada")
+    void cancelaViagemComAjusteSolicitado() throws Exception {
+        Long id = cadastrarViagem("Arapongas", "2026-09-01", "2026-09-03", "Treinamento");
+        mockMvc.perform(post("/api/viagens/{id}/submissao", id)).andExpect(status().isOk());
+        mockMvc.perform(post("/api/viagens/{id}/ajuste", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonGestorJustificativa(gestorId, "Revisar datas")))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/viagens/{id}/cancelamento", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.situacaoDescricao").value("Cancelada"));
+    }
+
+    @Test
+    @DisplayName("GET /historico de uma viagem inexistente retorna 404")
+    void historicoDeViagemInexistenteRetorna404() throws Exception {
+        mockMvc.perform(get("/api/viagens/{id}/historico", 999999))
+                .andExpect(status().isNotFound());
     }
 }

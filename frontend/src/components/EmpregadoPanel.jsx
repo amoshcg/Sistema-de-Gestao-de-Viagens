@@ -1,21 +1,48 @@
-import { useState } from 'react';
-import { cadastrarEmpregado } from '../api.js';
+import { useEffect, useState } from 'react';
+import { cadastrarEmpregado, alterarEmpregado } from '../api.js';
 
-const FORM_VAZIO = { matricula: '', nome: '', areaId: '' };
+const FORM_VAZIO = { matricula: '', nome: '', areaId: '', cargoId: '' };
 
-function validar(form) {
+function formularioDoEmpregado(empregado) {
+  return {
+    matricula: empregado.matricula,
+    nome: empregado.nome,
+    areaId: String(empregado.areaId),
+    cargoId: String(empregado.cargoId),
+  };
+}
+
+function validar(form, exigirMatricula) {
   const erros = {};
-  if (!form.matricula.trim()) erros.matricula = 'A matrícula é obrigatória';
+  if (exigirMatricula && !form.matricula.trim()) erros.matricula = 'A matrícula é obrigatória';
   if (!form.nome.trim()) erros.nome = 'O nome é obrigatório';
   if (!form.areaId) erros.areaId = 'A área é obrigatória';
+  if (!form.cargoId) erros.cargoId = 'O cargo é obrigatório';
   return erros;
 }
 
-export default function EmpregadoPanel({ empregados, areas, carregando, erro, aoCadastrar }) {
-  const [form, setForm] = useState(FORM_VAZIO);
+export default function EmpregadoPanel({
+  empregados,
+  areas,
+  cargos,
+  carregando,
+  erro,
+  aoCadastrar,
+  empregadoEditando,
+  aoEditar,
+  aoCancelarEdicao,
+}) {
+  const editando = Boolean(empregadoEditando);
+  const [form, setForm] = useState(editando ? formularioDoEmpregado(empregadoEditando) : FORM_VAZIO);
   const [erros, setErros] = useState({});
   const [enviando, setEnviando] = useState(false);
   const [falha, setFalha] = useState(null);
+
+  useEffect(() => {
+    setForm(editando ? formularioDoEmpregado(empregadoEditando) : FORM_VAZIO);
+    setErros({});
+    setFalha(null);
+  }, [empregadoEditando]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function alterarCampo(evento) {
     const { name, value } = evento.target;
@@ -27,7 +54,7 @@ export default function EmpregadoPanel({ empregados, areas, carregando, erro, ao
     evento.preventDefault();
     setFalha(null);
 
-    const errosLocais = validar(form);
+    const errosLocais = validar(form, !editando);
     if (Object.keys(errosLocais).length > 0) {
       setErros(errosLocais);
       return;
@@ -35,9 +62,23 @@ export default function EmpregadoPanel({ empregados, areas, carregando, erro, ao
 
     setEnviando(true);
     try {
-      await cadastrarEmpregado({ ...form, areaId: Number(form.areaId) });
-      setForm(FORM_VAZIO);
-      setErros({});
+      if (editando) {
+        const { matricula, ...dados } = form; // a matricula e imutavel apos o cadastro
+        await alterarEmpregado(empregadoEditando.id, {
+          ...dados,
+          areaId: Number(dados.areaId),
+          cargoId: Number(dados.cargoId),
+        });
+        aoCancelarEdicao();
+      } else {
+        await cadastrarEmpregado({
+          ...form,
+          areaId: Number(form.areaId),
+          cargoId: Number(form.cargoId),
+        });
+        setForm(FORM_VAZIO);
+        setErros({});
+      }
       aoCadastrar();
     } catch (e) {
       setErros(e.erros ?? {});
@@ -49,20 +90,24 @@ export default function EmpregadoPanel({ empregados, areas, carregando, erro, ao
 
   return (
     <section className="cartao">
-      <h2>Empregados</h2>
+      <h2>{editando ? `Editar empregado — ${empregadoEditando.matricula}` : 'Empregados'}</h2>
 
       <form onSubmit={enviar} noValidate className="linha linha-empregado">
         <div className="campo">
           <label htmlFor="matricula">Matrícula *</label>
-          <input
-            id="matricula"
-            name="matricula"
-            type="text"
-            maxLength={20}
-            value={form.matricula}
-            onChange={alterarCampo}
-            placeholder="Ex.: E001"
-          />
+          {editando ? (
+            <input id="matricula" type="text" disabled value={form.matricula} />
+          ) : (
+            <input
+              id="matricula"
+              name="matricula"
+              type="text"
+              maxLength={20}
+              value={form.matricula}
+              onChange={alterarCampo}
+              placeholder="Ex.: 1234-5"
+            />
+          )}
           {erros.matricula && <span className="erro">{erros.matricula}</span>}
         </div>
 
@@ -93,9 +138,29 @@ export default function EmpregadoPanel({ empregados, areas, carregando, erro, ao
           {erros.areaId && <span className="erro">{erros.areaId}</span>}
         </div>
 
-        <button type="submit" disabled={enviando}>
-          {enviando ? 'Salvando...' : 'Cadastrar empregado'}
-        </button>
+        <div className="campo">
+          <label htmlFor="cargoId">Cargo *</label>
+          <select id="cargoId" name="cargoId" value={form.cargoId} onChange={alterarCampo}>
+            <option value="">Selecione...</option>
+            {cargos.map((cargo) => (
+              <option key={cargo.id} value={cargo.id}>
+                {cargo.nome}
+              </option>
+            ))}
+          </select>
+          {erros.cargoId && <span className="erro">{erros.cargoId}</span>}
+        </div>
+
+        <div className="acoes-form">
+          <button type="submit" disabled={enviando}>
+            {enviando ? 'Salvando...' : editando ? 'Salvar alterações' : 'Cadastrar empregado'}
+          </button>
+          {editando && (
+            <button type="button" className="botao-secundario" onClick={aoCancelarEdicao} disabled={enviando}>
+              Cancelar
+            </button>
+          )}
+        </div>
       </form>
 
       {falha && <p className="aviso falha">{falha}</p>}
@@ -106,7 +171,10 @@ export default function EmpregadoPanel({ empregados, areas, carregando, erro, ao
         <ul className="lista-empregados">
           {empregados.map((empregado) => (
             <li key={empregado.id}>
-              <strong>{empregado.nome}</strong> — {empregado.matricula} ({empregado.areaNome})
+              <strong>{empregado.nome}</strong> — {empregado.matricula} ({empregado.areaNome}, {empregado.cargoNome})
+              <button type="button" className="botao-secundario" onClick={() => aoEditar(empregado)}>
+                Editar
+              </button>
             </li>
           ))}
           {empregados.length === 0 && <li className="aviso">Nenhum empregado cadastrado.</li>}

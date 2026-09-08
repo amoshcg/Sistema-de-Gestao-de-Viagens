@@ -18,13 +18,17 @@ public record ViagemResponse(
         String motivo,
         Long meioTransporteId,
         String meioTransporteDescricao,
-        String situacao,
+        Long situacaoId,
         String situacaoDescricao,
         Long empregadoId,
         String empregadoMatricula,
         String empregadoNome,
         Long empregadoAreaId,
-        String empregadoAreaNome
+        String empregadoAreaNome,
+        Long areaSolicitanteId,
+        String areaSolicitanteNome,
+        Long cargoSolicitanteId,
+        String cargoSolicitanteNome
 ) {
 
     public static ViagemResponse de(Viagem viagem) {
@@ -39,13 +43,17 @@ public record ViagemResponse(
                 viagem.getMotivo(),
                 meioTransporte.getId(),
                 meioTransporte.getDescricao(),
-                viagem.getSituacao().name(),
-                viagem.getSituacao().getDescricao(),
+                viagem.getStatusViagem().getId(),
+                viagem.getStatusViagem().getDescricao(),
                 empregado.getId(),
                 empregado.getMatricula(),
                 empregado.getNome(),
                 empregado.getArea().getId(),
-                empregado.getArea().getNome()
+                empregado.getArea().getNome(),
+                viagem.getAreaSolicitante().getId(),
+                viagem.getAreaSolicitante().getNome(),
+                viagem.getCargoSolicitante().getId(),
+                viagem.getCargoSolicitante().getNome()
         );
     }
 }

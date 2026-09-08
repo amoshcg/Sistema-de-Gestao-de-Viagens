@@ -7,7 +7,9 @@ public record EmpregadoResponse(
         String matricula,
         String nome,
         Long areaId,
-        String areaNome
+        String areaNome,
+        Long cargoId,
+        String cargoNome
 ) {
 
     public static EmpregadoResponse de(Empregado empregado) {
@@ -16,7 +18,9 @@ public record EmpregadoResponse(
                 empregado.getMatricula(),
                 empregado.getNome(),
                 empregado.getArea().getId(),
-                empregado.getArea().getNome()
+                empregado.getArea().getNome(),
+                empregado.getCargo().getId(),
+                empregado.getCargo().getNome()
         );
     }
 }
