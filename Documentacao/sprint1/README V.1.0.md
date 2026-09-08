@@ -39,19 +39,10 @@ O Vite faz proxy de `/api` para `http://localhost:8080`, então não há configu
 
 ## API REST
 
-| Método | Rota                          | Descrição                          | Respostas |
-|--------|-------------------------------|-------------------------------------|-----------|
-| POST   | `/api/viagens`                | Cadastra uma viagem em `RASCUNHO`   | `201` / `400` com erros por campo |
-| GET    | `/api/viagens`                | Lista as viagens cadastradas        | `200` |
-| GET    | `/api/viagens/{id}`           | Consulta os dados completos de uma viagem | `200` / `404` |
-| PUT    | `/api/viagens/{id}`           | Altera uma viagem (somente em `RASCUNHO`) | `200` / `400` / `404` / `409` |
-| DELETE | `/api/viagens/{id}`           | Exclui uma viagem (somente em `RASCUNHO`) | `204` / `404` / `409` |
-| POST   | `/api/viagens/{id}/submissao` | Submete para análise: `RASCUNHO` → `SOLICITADA` | `200` / `404` / `409` |
-| POST   | `/api/empregados`             | Cadastra um empregado               | `201` / `400` / `404` / `409` |
-| GET    | `/api/empregados`             | Lista os empregados                 | `200` |
-| POST   | `/api/areas`                  | Cadastra uma área                   | `201` / `400` / `409` |
-| GET    | `/api/areas`                  | Lista as áreas                      | `200` |
-| GET    | `/api/meios-transporte`       | Lista as opções de meio de transporte | `200` |
+| Método | Rota           | Descrição                          | Respostas |
+|--------|----------------|------------------------------------|-----------|
+| POST   | `/api/viagens` | Cadastra uma viagem em `RASCUNHO`  | `201` / `400` com erros por campo |
+| GET    | `/api/viagens` | Lista as viagens cadastradas       | `200` |
 
 Exemplo de cadastro:
 
@@ -63,8 +54,8 @@ curl -X POST http://localhost:8080/api/viagens \
     "dataSaida": "2026-09-10",
     "dataRetorno": "2026-09-12",
     "motivo": "Reunião com cliente",
-    "meioTransporteId": 1,
-    "empregadoId": 1
+    "meioTransporte": "AEREO",
+    "responsavel": "Carlos Penteado"
   }'
 ```
 
