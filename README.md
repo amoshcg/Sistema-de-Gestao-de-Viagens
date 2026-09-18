@@ -131,12 +131,21 @@ Resposta de erro de validação:
 
 ## Banco de dados
 
-O schema é versionado com **Flyway**, em
+As tabelas são versionadas com **Flyway**, em
 [`backend/src/main/resources/db/migration`](backend/src/main/resources/db/migration).
 As migrações rodam automaticamente na subida do backend. O modelo segue o MER
 elaborado pela equipe (`Documentacao/sprint2/MER.pdf`): tabelas `viagem`,
 `empregado`, `area`, `cargo`, `status_viagem`, `meio_transporte` e
 `viagem_status_historico`.
+
+Por segurança, as tabelas ficam em um schema dedicado (`sgv`), não no
+`public` — schema padrão e compartilhado do banco, alvo comum de ataques de
+"schema squatting". O [`database/init.sh`](database/init.sh) cria esse schema
+e aplica o princípio do privilégio mínimo: revoga qualquer acesso implícito
+do `PUBLIC` (todo mundo) ao banco e ao schema `public`, e concede ao usuário
+da aplicação (`grupo_sgv_backend`) apenas as permissões necessárias — `USAGE`
+e `CREATE` no schema `sgv`, e `SELECT`/`INSERT`/`UPDATE`/`DELETE` nas tabelas
+nele contidas.
 
 ## Testes
 
