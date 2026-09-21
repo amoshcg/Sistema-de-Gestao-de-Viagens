@@ -173,3 +173,36 @@ export async function cadastrarStatusViagem(status) {
   });
   return tratarResposta(resposta, 'Não foi possível cadastrar o status de viagem.');
 }
+
+export async function listarTiposDespesa() {
+  const resposta = await fetch(`${BASE_URL}/tipos-despesa`);
+  if (!resposta.ok) {
+    throw new Error('Não foi possível carregar os tipos de despesa.');
+  }
+  return resposta.json();
+}
+
+export async function listarDespesasDaViagem(viagemId) {
+  const resposta = await fetch(`${BASE_URL}/viagens/${viagemId}/despesas`);
+  if (!resposta.ok) {
+    throw new Error('Não foi possível carregar as despesas da viagem.');
+  }
+  return resposta.json();
+}
+
+export async function buscarResumoFinanceiro(viagemId) {
+  const resposta = await fetch(`${BASE_URL}/viagens/${viagemId}/despesas/resumo`);
+  if (!resposta.ok) {
+    throw new Error('Não foi possível carregar o resumo financeiro da viagem.');
+  }
+  return resposta.json();
+}
+
+export async function cadastrarDespesa(viagemId, despesa) {
+  const resposta = await fetch(`${BASE_URL}/viagens/${viagemId}/despesas`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(despesa),
+  });
+  return tratarResposta(resposta, 'Não foi possível registrar a despesa.');
+}

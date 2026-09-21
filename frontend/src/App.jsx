@@ -6,6 +6,7 @@ import AreasPage from './pages/AreasPage.jsx';
 import CargosPage from './pages/CargosPage.jsx';
 import MeiosTransportePage from './pages/MeiosTransportePage.jsx';
 import StatusViagemPage from './pages/StatusViagemPage.jsx';
+import TiposDespesaPage from './pages/TiposDespesaPage.jsx';
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/cargos" element={<CargosPage />} />
           <Route path="/meios-transporte" element={<MeiosTransportePage />} />
           <Route path="/status-viagem" element={<StatusViagemPage />} />
+          <Route path="/tipos-despesa" element={<TiposDespesaPage />} />
           <Route path="*" element={<Navigate to="/viagens" replace />} />
         </Routes>
       </main>
