@@ -206,3 +206,19 @@ export async function cadastrarDespesa(viagemId, despesa) {
   });
   return tratarResposta(resposta, 'Não foi possível registrar a despesa.');
 }
+
+export async function buscarCustosViagem(viagemId) {
+  const resposta = await fetch(`${BASE_URL}/viagens/${viagemId}/despesas/custos`);
+  if (!resposta.ok) {
+    throw new Error('Não foi possível carregar os custos da viagem.');
+  }
+  return resposta.json();
+}
+
+export async function buscarIndicadoresDashboard() {
+  const resposta = await fetch(`${BASE_URL}/dashboard`);
+  if (!resposta.ok) {
+    throw new Error('Não foi possível carregar os indicadores do dashboard.');
+  }
+  return resposta.json();
+}

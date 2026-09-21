@@ -359,6 +359,81 @@ th {
   text-align: right;
 }
 
+.custos-viagem {
+  border-top: 1px solid var(--cinza-borda);
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+}
+
+.custos-viagem h4 {
+  margin: 0 0 0.5rem;
+}
+
+.custos-viagem ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.custos-viagem li {
+  color: var(--cinza-texto);
+  padding: 0.15rem 0;
+}
+
+.grade-indicadores {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.indicador {
+  background: var(--fundo);
+  border: 1px solid var(--cinza-borda);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem;
+}
+
+.indicador-rotulo {
+  color: var(--cinza-texto);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.indicador-valor {
+  color: var(--azul);
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.indicador-valor-texto {
+  font-size: 1.1rem;
+}
+
+.indicador-aprovada .indicador-valor {
+  color: var(--verde);
+}
+
+.indicador-rejeitada .indicador-valor {
+  color: var(--vermelho);
+}
+
+@media (max-width: 700px) {
+  .grade-indicadores {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  .grade-indicadores {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 600px) {
   .linha {
     grid-template-columns: 1fr;

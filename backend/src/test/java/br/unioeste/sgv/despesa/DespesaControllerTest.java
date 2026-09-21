@@ -261,4 +261,38 @@ class DespesaControllerTest {
                 .andExpect(jsonPath("$.valorTotal").value(395.50))
                 .andExpect(jsonPath("$.despesas.length()").value(2));
     }
+
+    @Test
+    @DisplayName("Calcula os custos da viagem por categoria (deslocamento, hospedagem e taxi)")
+    void calculaCustosPorCategoria() throws Exception {
+        Long viagemId = cadastrarViagemAprovada();
+        Long tipoTransporte = tipoDespesaRepository.save(new TipoDespesa("Transporte")).getId();
+        Long tipoTaxi = tipoDespesaRepository.save(new TipoDespesa("Táxi")).getId();
+        Long tipoAlimentacao = tipoDespesaRepository.save(new TipoDespesa("Alimentação")).getId();
+
+        mockMvc.perform(post("/api/viagens/" + viagemId + "/despesas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonDespesa("2026-09-10", "Hotel Centro", "300.00", tipoDespesaId)))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/api/viagens/" + viagemId + "/despesas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonDespesa("2026-09-10", "Passagem aerea", "500.00", tipoTransporte)))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/api/viagens/" + viagemId + "/despesas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonDespesa("2026-09-11", "Corrida ate o hotel", "40.00", tipoTaxi)))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/api/viagens/" + viagemId + "/despesas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonDespesa("2026-09-11", "Almoço", "45.50", tipoAlimentacao)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/viagens/" + viagemId + "/despesas/custos"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.viagemId").value(viagemId))
+                .andExpect(jsonPath("$.custoDeslocamento").value(500.00))
+                .andExpect(jsonPath("$.custoHospedagem").value(300.00))
+                .andExpect(jsonPath("$.custoTaxi").value(40.00))
+                .andExpect(jsonPath("$.custoTotal").value(840.00));
+    }
 }
