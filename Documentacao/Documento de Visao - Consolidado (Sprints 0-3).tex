@@ -1,0 +1,801 @@
+\documentclass[12pt,article,oneside,a4paper]{abntex2}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{indentfirst}
+\usepackage{graphicx}
+\usepackage{microtype}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage[table]{xcolor}
+\usepackage{tabularx}
+\usepackage{xltabular}
+
+\definecolor{cabectab}{HTML}{F4B183}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\hypersetup{hidelinks}
+
+% Numeração de página no canto superior direito, conforme ABNT NBR 14724
+\makepagestyle{abntpag}
+\makeoddhead{abntpag}{}{}{\thepage}
+\makeevenhead{abntpag}{}{}{\thepage}
+\makeoddfoot{abntpag}{}{}{}
+\makeevenfoot{abntpag}{}{}{}
+
+\titulo{Documento de Visão}
+\autor{Eduarda Cunha, Amós Garcia e Carlos Penteado}
+\local{Foz do Iguaçu -- PR}
+\data{Setembro de 2026}
+
+\begin{document}
+
+% =====================================================================
+% CAPA
+% =====================================================================
+\thispagestyle{empty}
+\begin{center}
+\includegraphics[width=6cm]{Logo_unioeste.png}\\[0.8cm]
+{\bfseries\large UNIVERSIDADE ESTADUAL DO OESTE DO PARANÁ -- UNIOESTE}\\[2pt]
+{\bfseries\large CAMPUS DE FOZ DO IGUAÇU}\\[2pt]
+{\bfseries\large CURSO DE CIÊNCIA DA COMPUTAÇÃO}\\[2pt]
+{\large DISCIPLINA DE ENGENHARIA DE SOFTWARE II}
+
+\vspace{3cm}
+{\bfseries\Large Eduarda Cunha, Amós Garcia e Carlos Penteado}
+
+\vspace{3cm}
+{\bfseries\Huge DOCUMENTO DE VISÃO}\\[6pt]
+{\Large\itshape Sistema de Gestão de Viagens (SGV)}\\[4pt]
+{\large Consolidação das Sprints 0, 1, 2 e 3}
+
+\vfill
+{\large Foz do Iguaçu -- PR}\\
+{\large Setembro de 2026}
+\end{center}
+\clearpage
+
+\pagestyle{abntpag}
+
+\pdfbookmark[0]{Sumário}{toc}
+\tableofcontents
+\clearpage
+
+% =====================================================================
+% 1. INTRODUCAO
+% =====================================================================
+\section{Introdução}
+
+\subsection{Contexto e Justificativa}
+
+A empresa XYZ realiza frequentemente viagens para participação em reuniões com
+clientes, treinamentos, eventos, congressos e visitas técnicas. Atualmente, o
+controle dessas viagens é realizado por meio de planilhas eletrônicas e troca de
+e-mails, o que dificulta o acompanhamento das solicitações, o controle dos gastos
+e a obtenção de informações gerenciais.
+
+Com o crescimento da organização, surgiu a necessidade de centralizar essas
+informações em um sistema único que permita registrar, acompanhar e analisar as
+viagens realizadas pelos colaboradores. Dessa forma, foi concebido o Sistema de
+Gestão de Viagens (SGV), desenvolvido como projeto de estudo para prática de
+arquitetura web conteinerizada (Docker), backend em Spring Boot e frontend em
+React.
+
+\subsection{Objetivo do Sistema}
+
+O sistema deverá permitir o gerenciamento das viagens realizadas pelos
+colaboradores da empresa, desde o planejamento da viagem, passando pela análise e
+aprovação do gestor, até o acompanhamento dos custos envolvidos. Além disso, o
+sistema deverá disponibilizar informações gerenciais que auxiliem os gestores na
+tomada de decisão e no controle dos gastos relacionados às viagens.
+
+\subsection{Benefícios Esperados}
+
+Com a implantação do SGV, espera-se alcançar um conjunto de benefícios que
+impactam diretamente a forma como a empresa XYZ organiza e acompanha as viagens
+de seus colaboradores.
+
+\textbf{Centralização das informações:} as viagens deixam de ser controladas em
+planilhas dispersas e passam a ter um registro único e confiável.
+\textbf{Redução do uso de planilhas e e-mails:} o fluxo de solicitação e
+acompanhamento passa a ocorrer dentro do próprio sistema.
+\textbf{Rastreabilidade do fluxo de aprovação:} todo o histórico de mudanças de
+situação de uma viagem fica registrado e consultável.
+\textbf{Controle financeiro consolidado:} os gastos de cada viagem passam a ser
+calculados automaticamente a partir das despesas lançadas.
+\textbf{Visão gerencial:} gestores passam a contar com indicadores e painéis
+para apoiar a tomada de decisão sobre os recursos destinados a viagens.
+
+\subsection{Escopo do Sistema}
+
+O SGV está estruturado de forma modular, permitindo que cada conjunto de
+funcionalidades seja desenvolvido e evoluído de maneira incremental, sempre de
+forma integrada ao restante da solução.
+
+Até o encerramento da Sprint 3, três módulos foram concluídos: o
+\textbf{Módulo de Planejamento de Viagem} (RF\#1), responsável pelo cadastro,
+consulta, alteração, exclusão e submissão de viagens para análise, concluído
+nas Sprints 0 e 1; o \textbf{Módulo de Controle de Aprovação de Viagem}
+(RF\#2), responsável pela análise, aprovação, rejeição ou solicitação de ajuste
+das viagens submetidas, e pelo histórico de mudanças de situação, concluído na
+Sprint 2; e o \textbf{Módulo de Controle Financeiro da Viagem} (RF\#3),
+responsável pelo registro de despesas e pelo cálculo automático do valor
+total gasto em cada viagem aprovada, concluído na Sprint 3.
+
+Permanece planejado para as próximas sprints o \textbf{Módulo de Informações
+Gerenciais de Viagem} (RF\#4), responsável por consolidar indicadores e
+painéis gráficos que apoiem a gestão dos recursos destinados a viagens. A
+Sprint 2 introduziu o \textbf{Módulo de Cadastros de Apoio}, responsável pela
+manutenção dos cadastros de Empregado, Área, Cargo e Status de Viagem,
+utilizados pelos demais módulos; a Sprint 3 estendeu esse módulo com o
+cadastro (somente leitura) de Tipos de Despesa.
+
+% =====================================================================
+% 2. PERFIS DE USUARIOS
+% =====================================================================
+\section{Perfis de Usuários}
+
+O ecossistema do SGV baseia-se na interação de três atores dentro de um fluxo
+de planejamento, análise e aprovação de viagens.
+
+\textbf{Colaborador:} o usuário que viaja. É responsável por registrar os
+dados da viagem (destino, datas, motivo, transporte), solicitá-la ou
+cancelá-la enquanto ainda não foi analisada, corrigir e reenviar a viagem
+quando o gestor solicitar ajustes e, posteriormente, lançar despesas
+(hospedagem, alimentação, transporte, combustível, pedágios ou outras) em
+viagens aprovadas (Sprint 3).
+
+\textbf{Gestor:} o usuário com poder de decisão. Analisa as viagens
+``Solicitadas'', podendo aprová-las, rejeitá-las (com justificativa
+obrigatória) ou solicitar ajustes ao colaborador (também com justificativa
+obrigatória). Também atua em nível estratégico consumindo informações
+financeiras da plataforma.
+
+\textbf{RH:} mantém os cadastros de apoio usados pelo restante do sistema ---
+Empregado, Área, Cargo e Status de Viagem --- garantindo que o histórico de
+área e cargo de cada colaborador fique registrado ao longo do tempo
+(introduzido na Sprint 2).
+
+Como o sistema ainda não possui autenticação, a identificação de quem executa
+cada ação (colaborador ou gestor) ocorre por seleção explícita entre os
+empregados cadastrados; o backend valida que a ação de análise (aprovar,
+rejeitar ou solicitar ajuste) seja executada apenas por um empregado com o
+cargo ``Gestor''.
+
+% =====================================================================
+% 3. REGRAS DE NEGOCIO
+% =====================================================================
+\section{Regras de Negócio (RN)}
+
+As Regras de Negócio (RN) representam as diretrizes fundamentais que orientam
+o funcionamento do SGV. Elas definem ``o que'' precisa ser garantido do ponto
+de vista lógico e institucional, servindo de referência para os Requisitos
+Funcionais descritos na Seção 4. Esta seção reúne as regras do Módulo de
+Planejamento de Viagens (Sprints 0 e 1), as regras introduzidas na Sprint 2
+pelo Módulo de Controle de Aprovação e pelos Cadastros de Apoio, e as regras
+do Módulo de Controle Financeiro introduzidas na Sprint 3.
+
+\subsection{Cadastro de Viagem}
+
+Este grupo reúne as regras relacionadas ao registro inicial de uma viagem,
+garantindo que toda viagem cadastrada possua um responsável identificado e os
+dados mínimos necessários para seu planejamento.
+
+\begin{xltabular}{\textwidth}{|l|l|Y|}
+\hline
+\rowcolor{cabectab}
+\textbf{ID} & \textbf{Regra de Negócio} & \textbf{Descrição} \\
+\hline
+\endhead
+RN-CAD-001 & Responsável obrigatório & Toda viagem deve possuir um responsável, correspondente ao empregado que realizou o cadastro. Esse vínculo não pode ser alterado após a criação. \\
+\hline
+RN-CAD-002 & Situação inicial & Toda viagem deve ser criada na situação ``Rascunho'', não podendo ser criada diretamente em qualquer outra situação. \\
+\hline
+RN-CAD-003 & Campos obrigatórios & Destino, data de saída, data de retorno, motivo e meio de transporte devem ser informados no cadastro da viagem. \\
+\hline
+RN-CAD-004 & Consistência do período & A data de retorno deve ser igual ou posterior à data de saída. \\
+\hline
+\end{xltabular}
+
+\bigskip
+
+\subsection{Consulta e Pesquisa de Viagens}
+
+Este grupo reúne as regras relacionadas à localização e visualização de
+viagens já cadastradas, garantindo que o usuário consiga acompanhar seus
+planejamentos de forma rápida.
+
+\begin{xltabular}{\textwidth}{|l|l|Y|}
+\hline
+\rowcolor{cabectab}
+\textbf{ID} & \textbf{Regra de Negócio} & \textbf{Descrição} \\
+\hline
+\endhead
+RN-CON-001 & Filtros de pesquisa & O sistema deve permitir localizar viagens por destino, período e situação, isolada ou combinadamente. \\
+\hline
+RN-CON-002 & Retorno mínimo da pesquisa & Toda pesquisa deve retornar, no mínimo, destino, período, situação e responsável da viagem, permitindo identificação rápida do registro. \\
+\hline
+\end{xltabular}
+
+\bigskip
+
+\subsection{Alteração e Exclusão de Viagens}
+
+Este grupo reúne as regras que controlam em quais condições uma viagem pode
+ser modificada ou removida, preservando a integridade do processo a partir do
+momento em que a viagem é submetida para análise.
+
+\begin{xltabular}{\textwidth}{|l|l|Y|}
+\hline
+\rowcolor{cabectab}
+\textbf{ID} & \textbf{Regra de Negócio} & \textbf{Descrição} \\
+\hline
+\endhead
+RN-ALT-001 & Restrição por situação & Viagens só podem ser alteradas ou excluídas enquanto estiverem na situação ``Rascunho''. \\
+\hline
+RN-ALT-002 & Somente o responsável altera & Apenas o empregado responsável pela viagem pode alterá-la ou excluí-la. \\
+\hline
+RN-ALT-003 & Exclusão definitiva & A exclusão de uma viagem em rascunho é definitiva. Viagens submetidas, aprovadas, rejeitadas, em ajuste ou canceladas não podem ser excluídas. \\
+\hline
+\end{xltabular}
+
+\bigskip
+
+\subsection{Submissão para Análise}
+
+Este grupo reúne as regras relacionadas à transição de uma viagem do
+planejamento para o fluxo de aprovação, marcando o encerramento da
+responsabilidade do Módulo de Planejamento sobre o registro.
+
+\begin{xltabular}{\textwidth}{|l|l|Y|}
+\hline
+\rowcolor{cabectab}
+\textbf{ID} & \textbf{Regra de Negócio} & \textbf{Descrição} \\
+\hline
+\endhead
+RN-SUB-001 & Transição de situação & A submissão altera a situação da viagem de ``Rascunho'' (ou ``Ajuste solicitado'') para ``Solicitada'', tornando-a indisponível para alteração ou exclusão direta. \\
+\hline
+RN-SUB-002 & Completude obrigatória & Somente viagens com todos os campos obrigatórios preenchidos (RN-CAD-003 e RN-CAD-004) podem ser submetidas para análise. \\
+\hline
+RN-SUB-003 & Histórico obrigatório & Toda mudança de situação decorrente da submissão deve ser registrada no histórico da viagem. \\
+\hline
+\end{xltabular}
+
+\bigskip
+
+\subsection{Aprovação, Rejeição e Ajuste de Viagens (Sprint 2)}
+
+Este grupo, introduzido na Sprint 2, reúne as regras que controlam a análise
+das viagens pelo gestor e o encerramento (ou a reabertura) do fluxo de
+aprovação.
+
+\begin{xltabular}{\textwidth}{|l|l|Y|}
+\hline
+\rowcolor{cabectab}
+\textbf{ID} & \textbf{Regra de Negócio} & \textbf{Descrição} \\
+\hline
+\endhead
+RN-APR-001 & Restrição de análise por situação & Somente viagens na situação ``Solicitada'' podem ser aprovadas, rejeitadas ou receber solicitação de ajuste. \\
+\hline
+RN-APR-002 & Papel do gestor & Apenas um empregado cujo cargo seja ``Gestor'' pode aprovar, rejeitar ou solicitar ajuste em uma viagem; a tentativa de ação por empregado com outro cargo deve ser recusada pelo sistema. \\
+\hline
+RN-APR-003 & Justificativa obrigatória & A rejeição e a solicitação de ajuste exigem justificativa preenchida pelo gestor; a aprovação não exige justificativa. \\
+\hline
+RN-APR-004 & Encerramento do fluxo & Aprovação e rejeição são transições finais --- a viagem não retorna a nenhuma situação anterior a partir delas. \\
+\hline
+RN-APR-005 & Reabertura por ajuste & Ao solicitar ajuste, a viagem retorna à situação ``Ajuste solicitado'', reabilitando a edição pelo colaborador; ao ser corrigida e reenviada, a viagem volta à situação ``Solicitada''. \\
+\hline
+RN-APR-006 & Cancelamento pelo colaborador & O colaborador pode cancelar uma viagem enquanto ela estiver em ``Rascunho'' ou em ``Ajuste solicitado'', encerrando o fluxo em ``Cancelada''. \\
+\hline
+RN-APR-007 & Histórico obrigatório & Toda mudança de situação decorrente de aprovação, rejeição, ajuste ou cancelamento deve ser registrada no histórico da viagem, com data, responsável, situação e justificativa (quando houver). \\
+\hline
+\end{xltabular}
+
+\bigskip
+
+\subsection{Cadastros de Apoio --- Empregado, Área, Cargo e Status de Viagem (Sprint 2)}
+
+Este grupo, também introduzido na Sprint 2, reúne as regras dos cadastros
+mantidos pelo RH e utilizados pelos demais módulos do sistema.
+
+\begin{xltabular}{\textwidth}{|l|l|Y|}
+\hline
+\rowcolor{cabectab}
+\textbf{ID} & \textbf{Regra de Negócio} & \textbf{Descrição} \\
+\hline
+\endhead
+RN-EMP-001 & Formato de matrícula & A matrícula do empregado deve seguir o formato XXXX-X (quatro dígitos, hífen e um dígito verificador). \\
+\hline
+RN-EMP-002 & Matrícula imutável & A matrícula do empregado não pode ser alterada após o cadastro; apenas nome, área e cargo podem ser atualizados. \\
+\hline
+RN-EMP-003 & Área e cargo obrigatórios & Todo empregado deve possuir uma área e um cargo vinculados no cadastro. \\
+\hline
+RN-EMP-004 & Fotografia de área e cargo na viagem & A viagem registra a área e o cargo do empregado no momento da solicitação, preservando esse histórico ainda que o empregado mude de área ou cargo posteriormente. \\
+\hline
+RN-CAD-APO-001 & Unicidade dos cadastros de apoio & Os nomes cadastrados em Área, Cargo e Status de Viagem não podem se repetir. \\
+\hline
+\end{xltabular}
+
+\bigskip
+
+\subsection{Controle Financeiro --- Despesas (Sprint 3)}
+
+Este grupo, introduzido na Sprint 3, reúne as regras que controlam o
+lançamento de despesas em viagens já aprovadas, garantindo a integridade dos
+valores financeiros consolidados por viagem.
+
+\begin{xltabular}{\textwidth}{|l|l|Y|}
+\hline
+\rowcolor{cabectab}
+\textbf{ID} & \textbf{Regra de Negócio} & \textbf{Descrição} \\
+\hline
+\endhead
+RN-DESP-001 & Restrição de lançamento por situação & Somente viagens na situação ``Aprovada'' podem receber lançamentos de despesa; consequentemente, viagens ``Rejeitadas'' e quaisquer outras situações não podem. \\
+\hline
+RN-DESP-002 & Campos obrigatórios & Data, tipo, descrição e valor devem ser informados no lançamento de cada despesa. \\
+\hline
+RN-DESP-003 & Valor positivo & O valor da despesa deve ser maior que zero; valores iguais ou inferiores a zero não são aceitos. \\
+\hline
+RN-DESP-004 & Data não futura & A data da despesa não pode ser posterior à data atual. \\
+\hline
+RN-DESP-005 & Cálculo automático do total & O valor total gasto na viagem é calculado automaticamente como a soma de todas as despesas nela lançadas. \\
+\hline
+\end{xltabular}
+
+\bigskip
+
+% =====================================================================
+% 4. REQUISITOS FUNCIONAIS
+% =====================================================================
+\section{Requisitos Funcionais (RF)}
+
+Os Requisitos Funcionais (RF) estabelecem as funcionalidades que o sistema
+deve disponibilizar para que as Regras de Negócio da Seção 3 sejam
+implementadas de forma prática e efetiva. Eles descrevem, em termos
+objetivos, as ações que os usuários poderão executar e os comportamentos
+esperados do sistema em resposta a essas interações.
+
+\subsection{Cadastro de Viagem}
+
+\begin{xltabular}{\textwidth}{|l|Y|Y|Y|}
+\hline
+\rowcolor{cabectab}
+\textbf{ID} & \textbf{Descrição} & \textbf{Regras / Descrição} & \textbf{Observações} \\
+\hline
+\endhead
+RF-CAD-001 & O sistema deve permitir que o empregado cadastre uma nova viagem, informando destino, data de saída, data de retorno, motivo e meio de transporte. & Vincula-se a RN-CAD-001 a RN-CAD-004. A viagem é criada na situação ``Rascunho'', com o responsável definido automaticamente como o empregado que a cadastrou. O sistema deve validar a consistência do período antes de persistir o registro. & O campo ``meio de transporte'' é implementado como lista de opções pré-definidas. Relaciona-se a RF-SUB-001. \\
+\hline
+\end{xltabular}
+
+\bigskip
+
+\subsection{Consulta e Pesquisa de Viagens}
+
+\begin{xltabular}{\textwidth}{|l|Y|Y|Y|}
+\hline
+\rowcolor{cabectab}
+\textbf{ID} & \textbf{Descrição} & \textbf{Regras / Descrição} & \textbf{Observações} \\
+\hline
+\endhead
+RF-CON-001 & O sistema deve permitir visualizar os dados completos de uma viagem específica, incluindo destino, período, motivo, meio de transporte, situação atual e responsável. & A consulta deve estar disponível independentemente da situação da viagem (rascunho, solicitada, aprovada, rejeitada, ajuste solicitado ou cancelada). & Serve de base para RF-CON-002 e para a tela de acompanhamento do usuário. \\
+\hline
+RF-CON-002 & O sistema deve exibir a lista de viagens cadastradas pelo empregado responsável, com informações resumidas (destino, período e situação). & A listagem deve ser ordenável, priorizando as viagens mais recentes. & Base para a tela inicial do módulo de Planejamento de Viagens. \\
+\hline
+\end{xltabular}
+
+\bigskip
+
+\subsection{Alteração e Exclusão de Viagens}
+
+\begin{xltabular}{\textwidth}{|l|Y|Y|Y|}
+\hline
+\rowcolor{cabectab}
+\textbf{ID} & \textbf{Descrição} & \textbf{Regras / Descrição} & \textbf{Observações} \\
+\hline
+\endhead
+RF-ALT-001 & O sistema deve permitir que o responsável altere destino, período, motivo e meio de transporte de uma viagem, desde que ela esteja na situação ``Rascunho'' ou ``Ajuste solicitado''. & Implementa RN-ALT-001 e RN-ALT-002. Reaplica as validações de RN-CAD-003 e RN-CAD-004 a cada alteração. Tentativas de alteração fora dessas situações devem retornar erro. & --- \\
+\hline
+RF-ALT-002 & O sistema deve permitir que o responsável exclua uma viagem, desde que ela esteja na situação ``Rascunho''. & Implementa RN-ALT-001 e RN-ALT-003. A exclusão é definitiva. & --- \\
+\hline
+\end{xltabular}
+
+\bigskip
+
+\subsection{Submissão para Análise}
+
+\begin{xltabular}{\textwidth}{|l|Y|Y|Y|}
+\hline
+\rowcolor{cabectab}
+\textbf{ID} & \textbf{Descrição} & \textbf{Regras / Descrição} & \textbf{Observações} \\
+\hline
+\endhead
+RF-SUB-001 & O sistema deve permitir que o responsável submeta (ou reenvie) uma viagem para análise, alterando sua situação para ``Solicitada''. & Implementa RN-SUB-001 a RN-SUB-003. A submissão só é permitida se todos os campos obrigatórios estiverem preenchidos; a mudança de situação deve ser registrada em histórico. & Ponto de integração com o Módulo de Controle de Aprovação de Viagem, que passa a tratar a viagem a partir desta situação. \\
+\hline
+\end{xltabular}
+
+\bigskip
+
+\subsection{Aprovação, Rejeição e Ajuste de Viagens (Sprint 2)}
+
+\begin{xltabular}{\textwidth}{|l|Y|Y|Y|}
+\hline
+\rowcolor{cabectab}
+\textbf{ID} & \textbf{Descrição} & \textbf{Regras / Descrição} & \textbf{Observações} \\
+\hline
+\endhead
+RF-APR-001 & O sistema deve permitir que um gestor aprove uma viagem na situação ``Solicitada'', alterando sua situação para ``Aprovada''. & Implementa RN-APR-001, RN-APR-002, RN-APR-004 e RN-APR-007. & Retorna erro de conflito (409) se o empregado informado não for gestor ou a viagem não estiver ``Solicitada''. \\
+\hline
+RF-APR-002 & O sistema deve permitir que um gestor rejeite uma viagem ``Solicitada'', mediante justificativa obrigatória, alterando sua situação para ``Rejeitada''. & Implementa RN-APR-001 a RN-APR-004 e RN-APR-007. & --- \\
+\hline
+RF-APR-003 & O sistema deve permitir que um gestor solicite ajuste em uma viagem ``Solicitada'', mediante justificativa obrigatória, devolvendo-a ao colaborador. & Implementa RN-APR-001 a RN-APR-003, RN-APR-005 e RN-APR-007. & Reabilita a edição da viagem pelo colaborador (RF-ALT-001). \\
+\hline
+RF-APR-004 & O sistema deve permitir que o colaborador cancele uma viagem em ``Rascunho'' ou ``Ajuste solicitado'', alterando sua situação para ``Cancelada''. & Implementa RN-APR-006 e RN-APR-007. & --- \\
+\hline
+RF-APR-005 & O sistema deve disponibilizar o histórico completo de mudanças de situação de uma viagem. & Implementa RN-APR-007, RN-SUB-003 e RN-CAD-002. Exibe data, responsável, situação e justificativa (quando houver). & --- \\
+\hline
+\end{xltabular}
+
+\bigskip
+
+\subsection{Cadastros de Apoio (Sprint 2)}
+
+\begin{xltabular}{\textwidth}{|l|Y|Y|Y|}
+\hline
+\rowcolor{cabectab}
+\textbf{ID} & \textbf{Descrição} & \textbf{Regras / Descrição} & \textbf{Observações} \\
+\hline
+\endhead
+RF-EMP-001 & O sistema deve permitir o cadastro de empregados, informando nome, matrícula, área e cargo. & Implementa RN-EMP-001 a RN-EMP-003. & --- \\
+\hline
+RF-EMP-002 & O sistema deve permitir a alteração do nome, da área e do cargo de um empregado já cadastrado. & Implementa RN-EMP-002 --- a matrícula não pode ser alterada. & --- \\
+\hline
+RF-EMP-003 & O sistema deve permitir a listagem dos empregados cadastrados. & --- & --- \\
+\hline
+RF-APO-001 & O sistema deve permitir o cadastro e a listagem de Áreas, Cargos e Status de Viagem. & Implementa RN-CAD-APO-001. & --- \\
+\hline
+RF-APO-002 & O sistema deve disponibilizar a listagem das opções de meio de transporte para uso no cadastro de viagens. & --- & Cadastro somente leitura nesta versão. \\
+\hline
+\end{xltabular}
+
+\bigskip
+
+\subsection{Controle Financeiro (Sprint 3)}
+
+\begin{xltabular}{\textwidth}{|l|Y|Y|Y|}
+\hline
+\rowcolor{cabectab}
+\textbf{ID} & \textbf{Descrição} & \textbf{Regras / Descrição} & \textbf{Observações} \\
+\hline
+\endhead
+RF-DESP-001 & O sistema deve permitir que o colaborador registre uma despesa em uma viagem Aprovada, informando data, tipo, descrição e valor. & Implementa RN-DESP-001 a RN-DESP-004. & Retorna erro de conflito (409) se a viagem não estiver Aprovada; erro de validação (400) para valor não positivo ou data futura. \\
+\hline
+RF-DESP-002 & O sistema deve permitir a consulta de todas as despesas lançadas em uma viagem. & Exibe data, tipo, descrição e valor de cada despesa, da mais antiga para a mais recente. & --- \\
+\hline
+RF-DESP-003 & O sistema deve disponibilizar um resumo financeiro consolidado da viagem, com o valor total gasto e a quantidade de despesas lançadas. & Implementa RN-DESP-005. & --- \\
+\hline
+RF-APO-003 & O sistema deve disponibilizar a listagem dos tipos de despesa (Hospedagem, Alimentação, Transporte, Combustível, Pedágios, Outras despesas) para uso no lançamento de despesas. & --- & Cadastro somente leitura, nos mesmos moldes do meio de transporte. \\
+\hline
+\end{xltabular}
+
+\bigskip
+
+% =====================================================================
+% 5. REQUISITOS NAO FUNCIONAIS
+% =====================================================================
+\section{Requisitos Não Funcionais (RNF)}
+
+Os Requisitos Não Funcionais (RNF) estabelecem as qualidades, restrições e
+condições de operação que o sistema deve atender para entregar valor de forma
+consistente. Diferentemente dos requisitos funcionais, os RNF definem como o
+sistema deve se comportar em termos de desempenho, integridade e arquitetura
+técnica.
+
+\subsection{Cadastro, Consulta e Alteração}
+
+\begin{xltabular}{\textwidth}{|l|Y|Y|}
+\hline
+\rowcolor{cabectab}
+\textbf{ID} & \textbf{Descrição} & \textbf{Observações} \\
+\hline
+\endhead
+RNF-CAD-001 & O cadastro, a alteração e a exclusão de uma viagem devem ser concluídos em até 2 segundos em condições normais de uso. & Garante boa experiência de uso mesmo com validações síncronas de campos obrigatórios e datas. \\
+\hline
+RNF-CON-001 & A pesquisa de viagens deve retornar resultados em até 2 segundos para bases de até 1.000 viagens cadastradas. & Escala compatível com um ambiente de estudo. \\
+\hline
+RNF-ALT-001 & As validações de campos obrigatórios e de consistência de datas (RN-CAD-003, RN-CAD-004) devem ser aplicadas tanto no frontend (React) quanto no backend (Spring Boot). & Evita dependência exclusiva de validação client-side, reforçando a integridade dos dados. \\
+\hline
+\end{xltabular}
+
+\bigskip
+
+\subsection{Globais do Sistema}
+
+\begin{xltabular}{\textwidth}{|l|Y|Y|}
+\hline
+\rowcolor{cabectab}
+\textbf{ID} & \textbf{Descrição} & \textbf{Observações} \\
+\hline
+\endhead
+RNF-GLOB-001 & Toda comunicação entre o frontend e o backend deve ocorrer por meio de APIs REST, com respostas em formato JSON. & Alinhado ao requisito técnico geral do SGV (frontend React consumindo backend Spring Boot). \\
+\hline
+RNF-GLOB-002 & Os dados devem ser armazenados em banco de dados relacional (PostgreSQL) e permanecer íntegros após reinicializações dos containers. & Requisito técnico geral do SGV. \\
+\hline
+RNF-GLOB-003 & A interface do sistema deve ser responsiva, adaptando-se a diferentes tamanhos de tela. & Aplica-se às telas de cadastro, listagem, pesquisa e análise de viagens. \\
+\hline
+RNF-GLOB-004 & Frontend, backend e banco de dados devem ser executados em containers Docker isolados, comunicando-se por rede definida em docker-compose. & Essencial ao objetivo de estudo do projeto (arquitetura conteinerizada). \\
+\hline
+\end{xltabular}
+
+\bigskip
+
+\subsection{Controle de Aprovação e Autorização (Sprint 2)}
+
+\begin{xltabular}{\textwidth}{|l|Y|Y|}
+\hline
+\rowcolor{cabectab}
+\textbf{ID} & \textbf{Descrição} & \textbf{Observações} \\
+\hline
+\endhead
+RNF-APR-001 & A validação do cargo do gestor (RN-APR-002) deve ser feita no backend, retornando código de conflito (409) quando o empregado informado não possuir o cargo ``Gestor''. & Como o sistema não possui autenticação, a identificação do gestor é feita por seleção explícita, sendo indispensável a validação no servidor. \\
+\hline
+RNF-APR-002 & As transições de situação inválidas (por exemplo, aprovar uma viagem que não esteja ``Solicitada'') devem ser bloqueadas pelo backend, retornando código de conflito (409). & Reforça a integridade do fluxo de aprovação independentemente do estado da interface. \\
+\hline
+RNF-GLOB-005 & O versionamento do schema do banco de dados deve ser controlado por migrações Flyway, aplicadas automaticamente na subida do backend. & Introduzido na Sprint 2 junto aos cadastros de apoio e ao histórico de situação da viagem. \\
+\hline
+\end{xltabular}
+
+\bigskip
+
+\subsection{Integridade Financeira (Sprint 3)}
+
+\begin{xltabular}{\textwidth}{|l|Y|Y|}
+\hline
+\rowcolor{cabectab}
+\textbf{ID} & \textbf{Descrição} & \textbf{Observações} \\
+\hline
+\endhead
+RNF-DESP-001 & As validações de valor positivo e de data não futura (RN-DESP-003, RN-DESP-004) devem ser aplicadas tanto no frontend (React) quanto no backend (Spring Boot). & Evita dependência exclusiva de validação client-side, reforçando a integridade dos dados. \\
+\hline
+RNF-DESP-002 & A integridade dos valores monetários e das datas de despesa deve ser reforçada por restrições (CHECK) no banco de dados. & Defesa em profundidade, independente da camada de aplicação. \\
+\hline
+\end{xltabular}
+
+\bigskip
+
+% =====================================================================
+% 6. LISTA CONSOLIDADA
+% =====================================================================
+\section{Lista Consolidada de Requisitos}
+
+Esta seção apresenta a lista de requisitos em sua forma resumida e numerada,
+tal como definida na Sprint 1 e estendida na Sprint 2 (Módulo de Controle de
+Aprovação de Viagem e Cadastros de Apoio) e na Sprint 3 (Módulo de Controle
+Financeiro). Cada item resumido nesta lista corresponde a um ou mais
+requisitos detalhados nas Seções 3, 4 e 5.
+
+\subsection{Requisitos Funcionais (RF)}
+
+\textbf{RF01:} O sistema deve permitir o registro de viagens informando
+destino, período, motivo e meio de transporte.
+\textbf{RF02:} O sistema deve permitir consultar, alterar e excluir viagens
+enquanto estas ainda não tiverem sido aprovadas.
+\textbf{RF03:} O sistema deve suportar um fluxo de aprovação passando pelas
+situações: Rascunho, Solicitada, Aprovada, Rejeitada, Ajuste solicitado e
+Cancelada.
+\textbf{RF04:} O sistema deve exigir o registro de uma justificativa pelo
+gestor em caso de rejeição ou de solicitação de ajuste da viagem.
+\textbf{RF05:} O sistema deve manter e permitir a consulta do histórico
+completo de alterações de situação de cada viagem.
+
+\textbf{RF06:} O sistema deve permitir o registro de despesas informando
+data, tipo, descrição e valor em viagens Aprovadas (Módulo Financeiro ---
+Sprint 3).
+\textbf{RF07:} O sistema deve calcular de forma automática o valor total
+gasto na viagem (Módulo Financeiro --- Sprint 3).
+\textbf{RF08:} O sistema deve permitir a visualização de um resumo financeiro
+consolidado com todas as despesas lançadas (Módulo Financeiro --- Sprint 3).
+\textbf{RF09:} O sistema deve disponibilizar pesquisa de viagens utilizando
+filtros de destino, período e situação (planejado).
+\textbf{RF10:} O sistema deve apresentar painéis e indicadores com a
+quantidade total de viagens, aprovadas, rejeitadas, valor total gasto,
+destino mais visitado e custo médio (Módulo de Informações Gerenciais ---
+planejado).
+
+\textbf{RF11:} O sistema deve permitir que o gestor solicite ajuste em uma
+viagem ``Solicitada'', devolvendo-a ao colaborador para correção.
+\textbf{RF12:} O sistema deve permitir que o colaborador cancele uma viagem
+em ``Rascunho'' ou ``Ajuste solicitado''.
+\textbf{RF13:} O sistema deve restringir a aprovação, a rejeição e a
+solicitação de ajuste a empregados com o cargo ``Gestor''.
+\textbf{RF14:} O sistema deve permitir o cadastro e a manutenção de
+Empregados, Áreas, Cargos e Status de Viagem.
+\textbf{RF15:} O sistema deve registrar a área e o cargo do empregado no
+momento da solicitação da viagem, preservando esse histórico.
+\textbf{RF16:} O sistema deve disponibilizar a listagem dos tipos de despesa
+pré-definidos, para uso no lançamento de despesas (Sprint 3).
+
+\subsection{Requisitos Não Funcionais (RNF)}
+
+\textbf{RNF01:} A solução deve ser uma aplicação web com separação clara
+entre Frontend, Backend e Banco de Dados.
+\textbf{RNF02:} A comunicação entre a interface de usuário e os serviços de
+negócio deve ser feita via APIs REST.
+\textbf{RNF03:} O backend deve ser implementado utilizando o framework
+Spring Boot.
+\textbf{RNF04:} O banco de dados deve ser relacional, especificamente o
+PostgreSQL.
+
+\textbf{RNF05:} Toda a arquitetura deve ser conteinerizada utilizando
+Docker.
+\textbf{RNF06:} Os dados devem persistir no banco mesmo após a
+reinicialização dos containers.
+\textbf{RNF07:} O versionamento do schema do banco de dados deve ser feito
+por meio de migrações Flyway, aplicadas automaticamente na subida do
+backend.
+\textbf{RNF08:} A validação das regras de autorização (cargo do gestor) e
+das transições de situação deve ocorrer no backend, independentemente de
+validações realizadas no frontend.
+\textbf{RNF09:} As validações de valor positivo e de data não futura das
+despesas devem ocorrer tanto no frontend quanto no backend (Sprint 3).
+\textbf{RNF10:} A integridade dos valores e datas de despesa deve ser
+reforçada por restrições (CHECK) no banco de dados (Sprint 3).
+
+\subsection{Regras de Negócio (RN)}
+
+\textbf{RN01:} A data de retorno da viagem deve ser igual ou posterior à
+data de saída.
+\textbf{RN02:} O destino e o motivo da viagem são de preenchimento
+obrigatório.
+\textbf{RN03:} Toda viagem deve possuir um usuário responsável (o autor do
+cadastro).
+\textbf{RN04:} Somente viagens com o status ``Aprovada'' poderão receber
+lançamentos de despesas (Módulo Financeiro --- Sprint 3).
+
+\textbf{RN05:} Viagens ``Rejeitadas'' não poderão ter despesas registradas
+(Módulo Financeiro --- Sprint 3).
+\textbf{RN06:} Lançamentos de despesas com valores iguais ou inferiores a
+zero não deverão ser aceitos (Módulo Financeiro --- Sprint 3).
+\textbf{RN07:} Despesas não podem ser registradas com datas futuras (Módulo
+Financeiro --- Sprint 3).
+\textbf{RN08:} O valor total da viagem é obrigatoriamente a soma de todas as
+suas despesas associadas (Módulo Financeiro --- Sprint 3).
+
+\textbf{RN09:} Toda e qualquer alteração de situação da viagem deve ser
+registrada no histórico.
+\textbf{RN10:} Somente viagens na situação ``Solicitada'' podem ser
+aprovadas, rejeitadas ou receber solicitação de ajuste.
+\textbf{RN11:} A matrícula do empregado deve seguir o formato XXXX-X e não
+pode ser alterada após o cadastro.
+\textbf{RN12:} Todo empregado deve possuir área e cargo vinculados,
+fotografados na viagem no momento da solicitação.
+\textbf{RN13:} Data, tipo, descrição e valor são de preenchimento obrigatório
+no lançamento de despesas (Sprint 3).
+
+% =====================================================================
+% 7. ESPECIFICACAO DE CASOS DE USO
+% =====================================================================
+\section{Especificação de Casos de Uso}
+
+Esta seção detalha os principais casos de uso do SGV, organizados por área
+funcional. Os casos de uso das Sprints 0 e 1 tratam do planejamento de
+viagens; os introduzidos na Sprint 2 cobrem a análise/aprovação de viagens e
+os cadastros de apoio mantidos pelo RH; os introduzidos na Sprint 3 cobrem o
+registro de despesas e a consulta do resumo financeiro da viagem.
+
+\subsection{Operações de Lançamento e Registro}
+
+\begin{xltabular}{\textwidth}{|Y|l|Y|Y|}
+\hline
+\rowcolor{cabectab}
+\textbf{Caso de Uso} & \textbf{Ator} & \textbf{Fluxo Principal} & \textbf{Condições} \\
+\hline
+\endhead
+Manter Viagem & Colaborador & Acessa o formulário, preenche destino, datas, motivo, transporte e salva. & A data de retorno não pode ser anterior à data de saída. Inicia como ``Rascunho''. \\
+\hline
+Submeter/Reenviar Viagem & Colaborador & Submete a viagem para análise ou a reenvia após um pedido de ajuste. & A viagem passa para ``Solicitada''; exige todos os campos obrigatórios preenchidos. \\
+\hline
+Cancelar Viagem & Colaborador & Seleciona uma viagem em ``Rascunho'' ou ``Ajuste solicitado'' e confirma o cancelamento. & A viagem passa para ``Cancelada''; ação não reversível. \\
+\hline
+Registrar Despesas & Colaborador & Seleciona uma viagem Aprovada e informa data, tipo (Hospedagem, Alimentação, Transporte, Combustível, Pedágios ou Outras despesas), descrição e valor. & O lançamento só é permitido se a viagem estiver ``Aprovada''; valor deve ser maior que zero e a data não pode ser futura (Sprint 3). \\
+\hline
+\end{xltabular}
+
+\bigskip
+
+\subsection{Operações de Gestão e Análise}
+
+\begin{xltabular}{\textwidth}{|Y|l|Y|Y|}
+\hline
+\rowcolor{cabectab}
+\textbf{Caso de Uso} & \textbf{Ator} & \textbf{Fluxo Principal} & \textbf{Condições} \\
+\hline
+\endhead
+Analisar Viagem (Aprovar / Rejeitar / Solicitar Ajuste) & Gestor & Lista as viagens ``Solicitadas'', revisa os detalhes e escolhe aprovar, rejeitar ou solicitar ajuste. & Rejeição e ajuste exigem justificativa obrigatória; somente empregados com cargo ``Gestor'' podem executar a ação. \\
+\hline
+Consultar Histórico da Viagem & Colaborador e Gestor & Acessa a viagem e visualiza a lista de mudanças de situação. & Exibe data, responsável, situação e justificativa (quando houver). \\
+\hline
+Consultar Indicadores & Gestor & Acessa o painel (dashboard) para visualizar totais de custos e volumes de viagens (planejado). & Os valores consolidados devem ser gerados a partir da soma das despesas registradas. \\
+\hline
+\end{xltabular}
+
+\bigskip
+
+\subsection{Cadastros de Apoio (RH --- Sprint 2)}
+
+\begin{xltabular}{\textwidth}{|Y|l|Y|Y|}
+\hline
+\rowcolor{cabectab}
+\textbf{Caso de Uso} & \textbf{Ator} & \textbf{Fluxo Principal} & \textbf{Condições} \\
+\hline
+\endhead
+Manter Empregado & RH & Cadastra ou altera nome, área e cargo do empregado. & Matrícula segue o formato XXXX-X e é imutável após o cadastro. \\
+\hline
+Manter Área & RH & Cadastra e lista as áreas da empresa. & O nome da área não pode se repetir. \\
+\hline
+Manter Cargo & RH & Cadastra e lista os cargos (ex.: Colaborador, Gestor). & O nome do cargo não pode se repetir. \\
+\hline
+Manter Status de Viagem & RH & Cadastra e lista os status possíveis de uma viagem. & O nome do status não pode se repetir. \\
+\hline
+\end{xltabular}
+
+\bigskip
+
+\subsection{Operações Compartilhadas}
+
+\begin{xltabular}{\textwidth}{|Y|l|Y|Y|}
+\hline
+\rowcolor{cabectab}
+\textbf{Caso de Uso} & \textbf{Ator} & \textbf{Fluxo Principal} & \textbf{Condições} \\
+\hline
+\endhead
+Pesquisar Viagens & Colaborador e Gestor & Informa os filtros (período, destino, situação) na barra de busca e visualiza os resultados (planejado). & O sistema deve retornar as informações de forma paginada para facilitar a identificação rápida. \\
+\hline
+Consultar Resumo Financeiro & Colaborador e Gestor & Acessa uma viagem Aprovada e visualiza a lista de despesas lançadas e o valor total gasto. & O valor total é calculado automaticamente a partir da soma das despesas registradas (Sprint 3). \\
+\hline
+\end{xltabular}
+
+\bigskip
+
+% =====================================================================
+% 8. RESTRICOES TECNOLOGICAS
+% =====================================================================
+\section{Restrições Tecnológicas e Arquitetura}
+
+O SGV adota uma arquitetura com separação clara entre Frontend e Backend,
+comunicando-se exclusivamente via APIs REST. O backend é implementado
+utilizando Spring Boot (Java 21), com persistência de dados estruturados em
+um banco relacional PostgreSQL 15, enquanto o frontend é implementado em
+React com Vite, servido em produção via Nginx.
+
+O versionamento do schema do banco de dados é feito por meio de migrações
+Flyway, aplicadas automaticamente na subida do backend --- recurso
+introduzido na Sprint 2. Toda a infraestrutura de execução é padronizada por
+meio de containers Docker orquestrados com docker-compose, assegurando que
+os dados cadastrados não sejam perdidos após a reinicialização.
+
+Desde a Sprint 3, os dados financeiros contam com uma camada adicional de
+integridade: além das validações de aplicação, o valor e a data de cada
+despesa são reforçados por restrições \texttt{CHECK} diretamente nas
+migrações do banco de dados.
+
+% =====================================================================
+% 9. CONSIDERACOES FINAIS
+% =====================================================================
+\section{Considerações Finais e Próximos Passos}
+
+Ao final da Sprint 3, o SGV entrega de forma completa o ciclo de vida de
+planejamento, aprovação e controle financeiro de uma viagem --- do cadastro
+em ``Rascunho'', passando pela decisão do gestor (aprovação, rejeição ou
+ajuste), até o lançamento de despesas e o cálculo automático do total gasto
+em viagens Aprovadas --- apoiado pelos cadastros de apoio de Empregado,
+Área, Cargo, Status de Viagem e Tipo de Despesa mantidos pelo RH.
+
+Para as próximas sprints, ficam planejados o \textbf{Mecanismo de Pesquisa},
+com filtros combinados de destino, período e situação e retorno paginado; e
+o \textbf{Módulo de Informações Gerenciais de Viagem}, com um dashboard de
+indicadores de volume, destinos mais visitados, valor total gasto e custo
+médio por viagem.
+
+\end{document}
