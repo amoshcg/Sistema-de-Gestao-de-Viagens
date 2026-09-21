@@ -252,6 +252,20 @@ class ViagemControllerTest {
     }
 
     @Test
+    @DisplayName("RF#6: lista os destinos distintos ja cadastrados, em ordem alfabetica, para o dropdown de pesquisa")
+    void listaDestinosDistintos() throws Exception {
+        cadastrarViagem("Sao Paulo - SP", "2026-10-05", "2026-10-08", "Evento");
+        cadastrarViagem("Foz do Iguacu - PR", "2026-09-01", "2026-09-03", "Congresso");
+        cadastrarViagem("Foz do Iguacu - PR", "2026-11-01", "2026-11-03", "Visita tecnica");
+
+        mockMvc.perform(get("/api/viagens/destinos"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0]").value("Foz do Iguacu - PR"))
+                .andExpect(jsonPath("$[1]").value("Sao Paulo - SP"));
+    }
+
+    @Test
     @DisplayName("RF#6: pesquisa de viagens filtra por periodo (intersecao com dataInicio/dataFim)")
     void pesquisaViagensPorPeriodo() throws Exception {
         cadastrarViagem("Foz do Iguacu - PR", "2026-09-01", "2026-09-03", "Congresso");

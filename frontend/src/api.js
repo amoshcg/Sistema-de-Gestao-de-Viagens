@@ -25,6 +25,14 @@ export async function listarViagens(filtros = {}) {
   return resposta.json();
 }
 
+export async function listarDestinosViagens() {
+  const resposta = await fetch(`${BASE_URL}/viagens/destinos`);
+  if (!resposta.ok) {
+    throw new Error('Não foi possível carregar os destinos.');
+  }
+  return resposta.json();
+}
+
 export async function cadastrarViagem(viagem) {
   const resposta = await fetch(`${BASE_URL}/viagens`, {
     method: 'POST',

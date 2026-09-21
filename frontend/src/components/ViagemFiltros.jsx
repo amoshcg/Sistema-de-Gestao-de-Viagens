@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 const FILTROS_VAZIOS = { destino: '', dataInicio: '', dataFim: '', situacao: '' };
 
-export default function ViagemFiltros({ statusViagem, aoPesquisar }) {
+export default function ViagemFiltros({ destinos, statusViagem, aoPesquisar }) {
   const [filtros, setFiltros] = useState(FILTROS_VAZIOS);
 
   function atualizarCampo(campo, valor) {
@@ -25,13 +25,18 @@ export default function ViagemFiltros({ statusViagem, aoPesquisar }) {
       <form onSubmit={pesquisar} noValidate className="linha linha-filtros">
         <div className="campo">
           <label htmlFor="filtro-destino">Destino</label>
-          <input
+          <select
             id="filtro-destino"
-            type="text"
             value={filtros.destino}
             onChange={(evento) => atualizarCampo('destino', evento.target.value)}
-            placeholder="Ex.: Curitiba"
-          />
+          >
+            <option value="">Todos</option>
+            {destinos.map((destino) => (
+              <option key={destino} value={destino}>
+                {destino}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="campo">

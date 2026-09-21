@@ -4,6 +4,7 @@ import ViagemFiltros from '../components/ViagemFiltros.jsx';
 import ViagemList from '../components/ViagemList.jsx';
 import {
   listarViagens,
+  listarDestinosViagens,
   listarEmpregados,
   listarMeiosTransporte,
   listarTiposDespesa,
@@ -19,6 +20,7 @@ export default function ViagensPage() {
   const [meiosTransporte, setMeiosTransporte] = useState([]);
   const [tiposDespesa, setTiposDespesa] = useState([]);
   const [statusViagem, setStatusViagem] = useState([]);
+  const [destinos, setDestinos] = useState([]);
 
   const [viagemEditando, setViagemEditando] = useState(null);
   const filtrosAtuais = useRef({});
@@ -27,6 +29,10 @@ export default function ViagensPage() {
     () => empregados.filter((empregado) => empregado.cargoNome === 'Gestor'),
     [empregados]
   );
+
+  const carregarDestinos = useCallback(() => {
+    listarDestinosViagens().then(setDestinos).catch(() => setDestinos([]));
+  }, []);
 
   const carregarViagens = useCallback(async () => {
     setCarregandoViagens(true);
@@ -38,7 +44,8 @@ export default function ViagensPage() {
     } finally {
       setCarregandoViagens(false);
     }
-  }, []);
+    carregarDestinos();
+  }, [carregarDestinos]);
 
   useEffect(() => {
     carregarViagens();
@@ -68,7 +75,7 @@ export default function ViagensPage() {
         aoCancelarEdicao={() => setViagemEditando(null)}
       />
 
-      <ViagemFiltros statusViagem={statusViagem} aoPesquisar={aoPesquisar} />
+      <ViagemFiltros destinos={destinos} statusViagem={statusViagem} aoPesquisar={aoPesquisar} />
 
       <ViagemList
         viagens={viagens}

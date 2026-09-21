@@ -1,7 +1,9 @@
 package br.unioeste.sgv.viagem;
 
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 
 /**
  * RF#6 (Consultas e pesquisas): os filtros opcionais e combinaveis (destino, periodo,
@@ -14,4 +16,8 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
  * Specification, um filtro ausente simplesmente nao vira predicado nem parametro.
  */
 public interface ViagemRepository extends JpaRepository<Viagem, Long>, JpaSpecificationExecutor<Viagem> {
+
+    /** RF#6: destinos distintos ja cadastrados, para alimentar o dropdown de pesquisa. */
+    @Query("select distinct v.destino from Viagem v order by v.destino")
+    List<String> listarDestinosDistintos();
 }

@@ -89,6 +89,12 @@ public class ViagemService {
         return (valor == null || valor.isBlank()) ? null : valor.trim();
     }
 
+    /** RF#6: destinos distintos ja cadastrados, para o dropdown de pesquisa no frontend. */
+    @Transactional(readOnly = true)
+    public List<String> listarDestinos() {
+        return repository.listarDestinosDistintos();
+    }
+
     /** RF-CON-001: dados completos de uma viagem especifica, em qualquer situacao. */
     @Transactional(readOnly = true)
     public ViagemResponse buscarPorId(Long id) {

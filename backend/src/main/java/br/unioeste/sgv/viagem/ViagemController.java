@@ -48,6 +48,12 @@ public class ViagemController {
         return service.pesquisar(destino, dataInicio, dataFim, situacao);
     }
 
+    /** RF#6: destinos distintos ja cadastrados, para o dropdown de pesquisa. */
+    @GetMapping("/destinos")
+    public List<String> destinos() {
+        return service.listarDestinos();
+    }
+
     @GetMapping("/{id}")
     public ViagemResponse buscar(@PathVariable Long id) {
         return service.buscarPorId(id);
