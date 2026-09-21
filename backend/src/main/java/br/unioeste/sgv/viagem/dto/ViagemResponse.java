@@ -3,6 +3,7 @@ package br.unioeste.sgv.viagem.dto;
 import br.unioeste.sgv.empregado.Empregado;
 import br.unioeste.sgv.meiotransporte.MeioTransporte;
 import br.unioeste.sgv.viagem.Viagem;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
@@ -28,10 +29,16 @@ public record ViagemResponse(
         Long areaSolicitanteId,
         String areaSolicitanteNome,
         Long cargoSolicitanteId,
-        String cargoSolicitanteNome
+        String cargoSolicitanteNome,
+        BigDecimal valorGasto
 ) {
 
     public static ViagemResponse de(Viagem viagem) {
+        return de(viagem, null);
+    }
+
+    /** RF#6: a pesquisa de viagens tambem informa o gasto de cada uma (valorGasto). */
+    public static ViagemResponse de(Viagem viagem, BigDecimal valorGasto) {
         Empregado empregado = viagem.getEmpregado();
         MeioTransporte meioTransporte = viagem.getMeioTransporte();
         return new ViagemResponse(
@@ -53,7 +60,8 @@ public record ViagemResponse(
                 viagem.getAreaSolicitante().getId(),
                 viagem.getAreaSolicitante().getNome(),
                 viagem.getCargoSolicitante().getId(),
-                viagem.getCargoSolicitante().getNome()
+                viagem.getCargoSolicitante().getNome(),
+                valorGasto
         );
     }
 }

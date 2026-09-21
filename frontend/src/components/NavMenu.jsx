@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 
 const ITENS = [
+  { rota: '/dashboard', rotulo: 'Dashboard' },
   { rota: '/viagens', rotulo: 'Viagens' },
   { rota: '/empregados', rotulo: 'Empregados' },
   { rota: '/areas', rotulo: 'Áreas' },

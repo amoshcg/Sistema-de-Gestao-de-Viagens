@@ -1,5 +1,6 @@
 package br.unioeste.sgv.despesa;
 
+import br.unioeste.sgv.despesa.dto.CustoViagemResponse;
 import br.unioeste.sgv.despesa.dto.DespesaRequest;
 import br.unioeste.sgv.despesa.dto.DespesaResponse;
 import br.unioeste.sgv.despesa.dto.ResumoFinanceiroResponse;
@@ -40,5 +41,10 @@ public class DespesaController {
     @GetMapping("/resumo")
     public ResumoFinanceiroResponse resumo(@PathVariable Long viagemId) {
         return service.resumoFinanceiro(viagemId);
+    }
+
+    @GetMapping("/custos")
+    public CustoViagemResponse custos(@PathVariable Long viagemId) {
+        return service.calcularCustos(viagemId);
     }
 }

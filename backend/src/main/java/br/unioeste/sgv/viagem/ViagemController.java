@@ -8,7 +8,9 @@ import br.unioeste.sgv.viagem.dto.ViagemResponse;
 import br.unioeste.sgv.viagem.dto.ViagemStatusHistoricoResponse;
 import jakarta.validation.Valid;
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.List;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -35,9 +38,20 @@ public class ViagemController {
         return ResponseEntity.created(URI.create("/api/viagens/" + viagem.id())).body(viagem);
     }
 
+    /** RF#6: consulta de viagens com filtros opcionais e combinaveis de destino, periodo e situacao. */
     @GetMapping
-    public List<ViagemResponse> listar() {
-        return service.listar();
+    public List<ViagemResponse> pesquisar(
+            @RequestParam(required = false) String destino,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
+            @RequestParam(required = false) String situacao) {
+        return service.pesquisar(destino, dataInicio, dataFim, situacao);
+    }
+
+    /** RF#6: destinos distintos ja cadastrados, para o dropdown de pesquisa. */
+    @GetMapping("/destinos")
+    public List<String> destinos() {
+        return service.listarDestinos();
     }
 
     @GetMapping("/{id}")

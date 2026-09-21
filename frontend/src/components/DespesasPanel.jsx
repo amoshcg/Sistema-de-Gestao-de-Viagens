@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { listarDespesasDaViagem, buscarResumoFinanceiro, cadastrarDespesa } from '../api.js';
+import { listarDespesasDaViagem, buscarResumoFinanceiro, buscarCustosViagem, cadastrarDespesa } from '../api.js';
 
 function formatarData(iso) {
   const [ano, mes, dia] = iso.split('-');
@@ -15,6 +15,7 @@ const hoje = () => new Date().toISOString().slice(0, 10);
 export default function DespesasPanel({ viagemId, tiposDespesa }) {
   const [despesas, setDespesas] = useState([]);
   const [valorTotal, setValorTotal] = useState(0);
+  const [custos, setCustos] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [falha, setFalha] = useState(null);
 
@@ -28,9 +29,13 @@ export default function DespesasPanel({ viagemId, tiposDespesa }) {
   async function carregar() {
     setCarregando(true);
     try {
-      const resumo = await buscarResumoFinanceiro(viagemId);
+      const [resumo, custosViagem] = await Promise.all([
+        buscarResumoFinanceiro(viagemId),
+        buscarCustosViagem(viagemId),
+      ]);
       setDespesas(resumo.despesas);
       setValorTotal(resumo.valorTotal);
+      setCustos(custosViagem);
       setFalha(null);
     } catch (e) {
       setFalha(e.message);
@@ -166,6 +171,20 @@ export default function DespesasPanel({ viagemId, tiposDespesa }) {
           <p className="resumo-financeiro">
             <strong>Total gasto: {formatarValor(valorTotal)}</strong>
           </p>
+
+          {custos && (
+            <div className="custos-viagem">
+              <h4>Custos por categoria</h4>
+              <ul>
+                <li>Deslocamento: {formatarValor(custos.custoDeslocamento)}</li>
+                <li>Hospedagem: {formatarValor(custos.custoHospedagem)}</li>
+                <li>Táxi: {formatarValor(custos.custoTaxi)}</li>
+              </ul>
+              <p className="resumo-financeiro">
+                <strong>Custo total: {formatarValor(custos.custoTotal)}</strong>
+              </p>
+            </div>
+          )}
         </>
       )}
     </div>

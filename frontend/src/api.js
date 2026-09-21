@@ -10,10 +10,25 @@ async function tratarResposta(resposta, mensagemPadrao) {
   return corpo;
 }
 
-export async function listarViagens() {
-  const resposta = await fetch(`${BASE_URL}/viagens`);
+export async function listarViagens(filtros = {}) {
+  const parametros = new URLSearchParams();
+  Object.entries(filtros).forEach(([chave, valor]) => {
+    if (valor !== undefined && valor !== null && valor !== '') {
+      parametros.set(chave, valor);
+    }
+  });
+  const query = parametros.toString();
+  const resposta = await fetch(`${BASE_URL}/viagens${query ? `?${query}` : ''}`);
   if (!resposta.ok) {
     throw new Error('Não foi possível carregar as viagens.');
+  }
+  return resposta.json();
+}
+
+export async function listarDestinosViagens() {
+  const resposta = await fetch(`${BASE_URL}/viagens/destinos`);
+  if (!resposta.ok) {
+    throw new Error('Não foi possível carregar os destinos.');
   }
   return resposta.json();
 }
@@ -205,4 +220,20 @@ export async function cadastrarDespesa(viagemId, despesa) {
     body: JSON.stringify(despesa),
   });
   return tratarResposta(resposta, 'Não foi possível registrar a despesa.');
+}
+
+export async function buscarCustosViagem(viagemId) {
+  const resposta = await fetch(`${BASE_URL}/viagens/${viagemId}/despesas/custos`);
+  if (!resposta.ok) {
+    throw new Error('Não foi possível carregar os custos da viagem.');
+  }
+  return resposta.json();
+}
+
+export async function buscarIndicadoresDashboard() {
+  const resposta = await fetch(`${BASE_URL}/dashboard`);
+  if (!resposta.ok) {
+    throw new Error('Não foi possível carregar os indicadores do dashboard.');
+  }
+  return resposta.json();
 }

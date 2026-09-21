@@ -2,6 +2,7 @@ package br.unioeste.sgv.despesa;
 
 import br.unioeste.sgv.common.ConflitoException;
 import br.unioeste.sgv.common.RecursoNaoEncontradoException;
+import br.unioeste.sgv.despesa.dto.CustoViagemResponse;
 import br.unioeste.sgv.despesa.dto.DespesaRequest;
 import br.unioeste.sgv.despesa.dto.DespesaResponse;
 import br.unioeste.sgv.despesa.dto.ResumoFinanceiroResponse;
@@ -16,6 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class DespesaService {
+
+    /** Sprint final: "custo de deslocamento" agrupa as categorias ligadas a se locomover ate o destino. */
+    private static final List<String> CATEGORIAS_DESLOCAMENTO = List.of("Transporte", "Combustível", "Pedágios");
+    private static final List<String> CATEGORIA_HOSPEDAGEM = List.of("Hospedagem");
+    private static final List<String> CATEGORIA_TAXI = List.of("Táxi");
 
     private final DespesaRepository repository;
     private final ViagemRepository viagemRepository;
@@ -71,6 +77,20 @@ public class DespesaService {
                 .toList();
         BigDecimal valorTotal = repository.somarValorPorViagem(viagemId);
         return new ResumoFinanceiroResponse(viagemId, despesas.size(), valorTotal, despesas);
+    }
+
+    /**
+     * Custos da viagem por categoria (Sprint final: RF de calculo de custos). Considera
+     * somente deslocamento, hospedagem e taxi; o total e a soma dessas tres categorias.
+     */
+    @Transactional(readOnly = true)
+    public CustoViagemResponse calcularCustos(Long viagemId) {
+        buscarViagem(viagemId);
+        BigDecimal custoDeslocamento = repository.somarValorPorViagemETipos(viagemId, CATEGORIAS_DESLOCAMENTO);
+        BigDecimal custoHospedagem = repository.somarValorPorViagemETipos(viagemId, CATEGORIA_HOSPEDAGEM);
+        BigDecimal custoTaxi = repository.somarValorPorViagemETipos(viagemId, CATEGORIA_TAXI);
+        BigDecimal custoTotal = custoDeslocamento.add(custoHospedagem).add(custoTaxi);
+        return new CustoViagemResponse(viagemId, custoDeslocamento, custoHospedagem, custoTaxi, custoTotal);
     }
 
     private Viagem buscarViagem(Long viagemId) {
