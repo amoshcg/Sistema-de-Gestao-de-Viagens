@@ -32,13 +32,11 @@ gestor só informando o ID.
 
 ---
 
-## 2. Pesquisa de viagens (RF da seção 6 da especificação) nunca foi implementada
+## 2. ~~Pesquisa de viagens (RF da seção 6 da especificação) nunca foi implementada~~ — RESOLVIDO
 
 **Descrição:** A especificação pede filtros de destino, período e situação na consulta de
-viagens desde a Sprint 0. `GET /api/viagens` (`ViagemController.java:38-40`) e
-`ViagemRepository` (`findAllByOrderByCriadoEmDescIdDesc`) sempre retornam a lista inteira, sem
-nenhum parâmetro de busca; o frontend (`ViagensPage`/`ViagemList`) também não tem campo de
-filtro.
+viagens desde a Sprint 0. `GET /api/viagens` sempre retornava a lista inteira, sem nenhum
+parâmetro de busca; o frontend também não tinha campo de filtro.
 
 - **Classificação:** Inadvertido e imprudente — o requisito já estava documentado e nenhuma
   sprint percebeu a lacuna ao entregar cadastro/aprovação/despesas.
@@ -48,6 +46,15 @@ filtro.
 - **Definição de pronto:** `GET /api/viagens` aceita `destino`, `dataInicio`/`dataFim` e
   `situacao` como filtros opcionais combináveis; a tela de viagens tem um formulário de busca;
   testes cobrindo cada filtro isolado e combinado.
+- **Resolvido nesta sprint:** filtros implementados via `Specification`
+  (`ViagemSpecifications.java`), cada resultado já traz o valor gasto na viagem, e a tela de
+  Viagens ganhou o formulário "Pesquisar viagens" e a coluna "Total gasto". Durante a
+  implementação foi descoberto e corrigido um bug real contra o Postgres (não pego pelos testes,
+  que rodam em H2): o padrão `"(:param is null or ...)"` em JPQL faz o driver do Postgres tentar
+  inferir o tipo de parâmetros nulos a partir do texto da consulta preparada, e falha
+  (`could not determine data type of parameter` / `cannot cast type bytea to ...`) assim que a
+  consulta é reaproveitada pelo servidor — daí a escolha por `Specification`, que não gera
+  predicado nem bind para um filtro ausente.
 
 ---
 
