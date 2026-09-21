@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import NavMenu from './components/NavMenu.jsx';
+import DashboardPage from './pages/DashboardPage.jsx';
 import ViagensPage from './pages/ViagensPage.jsx';
 import EmpregadosPage from './pages/EmpregadosPage.jsx';
 import AreasPage from './pages/AreasPage.jsx';
@@ -20,6 +21,7 @@ export default function App() {
       <main className="conteudo">
         <Routes>
           <Route path="/" element={<Navigate to="/viagens" replace />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/viagens" element={<ViagensPage />} />
           <Route path="/empregados" element={<EmpregadosPage />} />
           <Route path="/areas" element={<AreasPage />} />

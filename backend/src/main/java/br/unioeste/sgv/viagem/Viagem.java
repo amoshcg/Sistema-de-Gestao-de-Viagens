@@ -146,6 +146,10 @@ public class Viagem {
         return STATUS_APROVADA.equalsIgnoreCase(statusViagem.getDescricao());
     }
 
+    public boolean isRejeitada() {
+        return STATUS_REJEITADA.equalsIgnoreCase(statusViagem.getDescricao());
+    }
+
     public Long getId() {
         return id;
     }
