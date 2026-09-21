@@ -240,6 +240,50 @@ class ViagemControllerTest {
     }
 
     @Test
+    @DisplayName("RF#6: pesquisa de viagens filtra por destino, sem diferenciar maiusculas/minusculas")
+    void pesquisaViagensPorDestino() throws Exception {
+        cadastrarViagem("Foz do Iguacu - PR", "2026-09-01", "2026-09-03", "Congresso");
+        cadastrarViagem("Sao Paulo - SP", "2026-10-05", "2026-10-08", "Evento");
+
+        mockMvc.perform(get("/api/viagens").param("destino", "iguacu"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].destino").value("Foz do Iguacu - PR"));
+    }
+
+    @Test
+    @DisplayName("RF#6: pesquisa de viagens filtra por periodo (intersecao com dataInicio/dataFim)")
+    void pesquisaViagensPorPeriodo() throws Exception {
+        cadastrarViagem("Foz do Iguacu - PR", "2026-09-01", "2026-09-03", "Congresso");
+        cadastrarViagem("Sao Paulo - SP", "2026-10-05", "2026-10-08", "Evento");
+
+        mockMvc.perform(get("/api/viagens")
+                        .param("dataInicio", "2026-10-01")
+                        .param("dataFim", "2026-10-31"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].destino").value("Sao Paulo - SP"));
+    }
+
+    @Test
+    @DisplayName("RF#6: pesquisa de viagens filtra por situacao e traz o valor gasto de cada uma")
+    void pesquisaViagensPorSituacaoComValorGasto() throws Exception {
+        Long viagemAprovadaId = cadastrarViagem("Curitiba - PR", "2026-09-01", "2026-09-03", "Reuniao");
+        mockMvc.perform(post("/api/viagens/" + viagemAprovadaId + "/submissao")).andExpect(status().isOk());
+        mockMvc.perform(post("/api/viagens/" + viagemAprovadaId + "/aprovacao")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonGestor(gestorId)))
+                .andExpect(status().isOk());
+        cadastrarViagem("Sao Paulo - SP", "2026-10-05", "2026-10-08", "Evento"); // permanece em Rascunho
+
+        mockMvc.perform(get("/api/viagens").param("situacao", "Aprovada"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].destino").value("Curitiba - PR"))
+                .andExpect(jsonPath("$[0].valorGasto").value(0));
+    }
+
+    @Test
     @DisplayName("RF-CON-001: consulta de uma viagem especifica retorna os dados completos")
     void buscaViagemPorId() throws Exception {
         Long id = cadastrarViagem("Londrina", "2026-09-01", "2026-09-03", "Treinamento");

@@ -22,6 +22,10 @@ function formatarDataHora(iso) {
   return data.toLocaleString('pt-BR');
 }
 
+function formatarValor(valor) {
+  return Number(valor ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
 /** Transforma a descrição do status (ex.: "Ajuste solicitado") num nome de classe CSS válido. */
 function classeSituacao(descricao) {
   const semAcentos = descricao.normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -114,6 +118,7 @@ export default function ViagemList({ viagens, gestores, tiposDespesa, carregando
                 <th>Transporte</th>
                 <th>Empregado</th>
                 <th>Situação</th>
+                <th>Total gasto</th>
                 <th>Ações</th>
               </tr>
             </thead>
@@ -142,6 +147,9 @@ export default function ViagemList({ viagens, gestores, tiposDespesa, carregando
                         <span className={`situacao situacao-${classeSituacao(viagem.situacaoDescricao)}`}>
                           {viagem.situacaoDescricao}
                         </span>
+                      </td>
+                      <td className="nao-quebra">
+                        {viagem.valorGasto == null ? '—' : formatarValor(viagem.valorGasto)}
                       </td>
                       <td className="nao-quebra">
                         {editavel && (
@@ -198,7 +206,7 @@ export default function ViagemList({ viagens, gestores, tiposDespesa, carregando
                     </tr>
                     {solicitada && (
                       <tr>
-                        <td colSpan={8}>
+                        <td colSpan={9}>
                           <AcaoGestorForm
                             gestores={gestores}
                             ocupado={ocupado}
@@ -217,14 +225,14 @@ export default function ViagemList({ viagens, gestores, tiposDespesa, carregando
                     )}
                     {despesasAbertas === viagem.id && (
                       <tr>
-                        <td colSpan={8}>
+                        <td colSpan={9}>
                           <DespesasPanel viagemId={viagem.id} tiposDespesa={tiposDespesa} />
                         </td>
                       </tr>
                     )}
                     {historicoAberto === viagem.id && (
                       <tr>
-                        <td colSpan={8}>
+                        <td colSpan={9}>
                           <div className="historico-viagem">
                             {carregandoHistorico && <p className="aviso">Carregando histórico...</p>}
                             {!carregandoHistorico && historico.length === 0 && (

@@ -2,6 +2,7 @@ package br.unioeste.sgv.viagem;
 
 import br.unioeste.sgv.common.ConflitoException;
 import br.unioeste.sgv.common.RecursoNaoEncontradoException;
+import br.unioeste.sgv.despesa.DespesaRepository;
 import br.unioeste.sgv.empregado.Empregado;
 import br.unioeste.sgv.empregado.EmpregadoRepository;
 import br.unioeste.sgv.meiotransporte.MeioTransporte;
@@ -14,7 +15,9 @@ import br.unioeste.sgv.viagem.dto.ViagemEdicaoRequest;
 import br.unioeste.sgv.viagem.dto.ViagemRequest;
 import br.unioeste.sgv.viagem.dto.ViagemResponse;
 import br.unioeste.sgv.viagem.dto.ViagemStatusHistoricoResponse;
+import java.time.LocalDate;
 import java.util.List;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,16 +29,19 @@ public class ViagemService {
     private final MeioTransporteRepository meioTransporteRepository;
     private final StatusViagemRepository statusViagemRepository;
     private final ViagemStatusHistoricoRepository historicoRepository;
+    private final DespesaRepository despesaRepository;
 
     public ViagemService(ViagemRepository repository, EmpregadoRepository empregadoRepository,
                           MeioTransporteRepository meioTransporteRepository,
                           StatusViagemRepository statusViagemRepository,
-                          ViagemStatusHistoricoRepository historicoRepository) {
+                          ViagemStatusHistoricoRepository historicoRepository,
+                          DespesaRepository despesaRepository) {
         this.repository = repository;
         this.empregadoRepository = empregadoRepository;
         this.meioTransporteRepository = meioTransporteRepository;
         this.statusViagemRepository = statusViagemRepository;
         this.historicoRepository = historicoRepository;
+        this.despesaRepository = despesaRepository;
     }
 
     /** RF-CAD-001: cadastra a viagem sempre na situacao Rascunho, vinculada a um empregado cadastrado. */
@@ -62,13 +68,25 @@ public class ViagemService {
         return ViagemResponse.de(viagem);
     }
 
-    /** RF-CON-002: lista as viagens cadastradas, das mais recentes para as mais antigas. */
+    /**
+     * RF-CON-002 / RF#6: lista as viagens cadastradas, das mais recentes para as mais antigas,
+     * com filtros opcionais de destino, periodo (dataInicio/dataFim) e situacao. Cada resultado
+     * ja traz o valor gasto na viagem, para a pesquisa identificar rapidamente os respectivos
+     * gastos sem uma segunda chamada.
+     */
     @Transactional(readOnly = true)
-    public List<ViagemResponse> listar() {
-        return repository.findAllByOrderByCriadoEmDescIdDesc()
+    public List<ViagemResponse> pesquisar(String destino, LocalDate dataInicio, LocalDate dataFim, String situacao) {
+        String destinoFiltro = normalizar(destino);
+        String situacaoFiltro = normalizar(situacao);
+        Sort ordenacao = Sort.by(Sort.Direction.DESC, "criadoEm").and(Sort.by(Sort.Direction.DESC, "id"));
+        return repository.findAll(ViagemSpecifications.pesquisar(destinoFiltro, dataInicio, dataFim, situacaoFiltro), ordenacao)
                 .stream()
-                .map(ViagemResponse::de)
+                .map(viagem -> ViagemResponse.de(viagem, despesaRepository.somarValorPorViagem(viagem.getId())))
                 .toList();
+    }
+
+    private String normalizar(String valor) {
+        return (valor == null || valor.isBlank()) ? null : valor.trim();
     }
 
     /** RF-CON-001: dados completos de uma viagem especifica, em qualquer situacao. */

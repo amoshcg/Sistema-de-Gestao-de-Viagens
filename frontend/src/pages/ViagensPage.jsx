@@ -1,7 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ViagemForm from '../components/ViagemForm.jsx';
+import ViagemFiltros from '../components/ViagemFiltros.jsx';
 import ViagemList from '../components/ViagemList.jsx';
-import { listarViagens, listarEmpregados, listarMeiosTransporte, listarTiposDespesa } from '../api.js';
+import {
+  listarViagens,
+  listarEmpregados,
+  listarMeiosTransporte,
+  listarTiposDespesa,
+  listarStatusViagem,
+} from '../api.js';
 
 export default function ViagensPage() {
   const [viagens, setViagens] = useState([]);
@@ -11,8 +18,10 @@ export default function ViagensPage() {
   const [empregados, setEmpregados] = useState([]);
   const [meiosTransporte, setMeiosTransporte] = useState([]);
   const [tiposDespesa, setTiposDespesa] = useState([]);
+  const [statusViagem, setStatusViagem] = useState([]);
 
   const [viagemEditando, setViagemEditando] = useState(null);
+  const filtrosAtuais = useRef({});
 
   const gestores = useMemo(
     () => empregados.filter((empregado) => empregado.cargoNome === 'Gestor'),
@@ -22,7 +31,7 @@ export default function ViagensPage() {
   const carregarViagens = useCallback(async () => {
     setCarregandoViagens(true);
     try {
-      setViagens(await listarViagens());
+      setViagens(await listarViagens(filtrosAtuais.current));
       setErroViagens(null);
     } catch (e) {
       setErroViagens(e.message);
@@ -36,10 +45,16 @@ export default function ViagensPage() {
     listarEmpregados().then(setEmpregados).catch(() => setEmpregados([]));
     listarMeiosTransporte().then(setMeiosTransporte).catch(() => setMeiosTransporte([]));
     listarTiposDespesa().then(setTiposDespesa).catch(() => setTiposDespesa([]));
+    listarStatusViagem().then(setStatusViagem).catch(() => setStatusViagem([]));
   }, [carregarViagens]);
 
   async function aoSalvarViagem() {
     setViagemEditando(null);
+    await carregarViagens();
+  }
+
+  async function aoPesquisar(filtros) {
+    filtrosAtuais.current = filtros;
     await carregarViagens();
   }
 
@@ -52,6 +67,8 @@ export default function ViagensPage() {
         aoSalvar={aoSalvarViagem}
         aoCancelarEdicao={() => setViagemEditando(null)}
       />
+
+      <ViagemFiltros statusViagem={statusViagem} aoPesquisar={aoPesquisar} />
 
       <ViagemList
         viagens={viagens}

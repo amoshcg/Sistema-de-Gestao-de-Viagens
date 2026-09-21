@@ -10,8 +10,15 @@ async function tratarResposta(resposta, mensagemPadrao) {
   return corpo;
 }
 
-export async function listarViagens() {
-  const resposta = await fetch(`${BASE_URL}/viagens`);
+export async function listarViagens(filtros = {}) {
+  const parametros = new URLSearchParams();
+  Object.entries(filtros).forEach(([chave, valor]) => {
+    if (valor !== undefined && valor !== null && valor !== '') {
+      parametros.set(chave, valor);
+    }
+  });
+  const query = parametros.toString();
+  const resposta = await fetch(`${BASE_URL}/viagens${query ? `?${query}` : ''}`);
   if (!resposta.ok) {
     throw new Error('Não foi possível carregar as viagens.');
   }

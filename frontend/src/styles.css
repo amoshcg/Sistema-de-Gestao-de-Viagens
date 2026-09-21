@@ -236,6 +236,25 @@ button:disabled {
   margin-bottom: 1rem;
 }
 
+.linha-filtros {
+  align-items: end;
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
+}
+
+.linha-filtros .campo {
+  margin-bottom: 0;
+}
+
+.linha-filtros .acoes-form {
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 900px) {
+  .linha-filtros {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 .aviso {
   color: var(--cinza-texto);
   margin: 1rem 0 0;
