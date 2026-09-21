@@ -141,6 +141,11 @@ public class Viagem {
         return STATUS_SOLICITADA.equalsIgnoreCase(statusViagem.getDescricao());
     }
 
+    /** RN: somente viagens Aprovadas podem receber lancamentos de despesas. */
+    public boolean isAprovada() {
+        return STATUS_APROVADA.equalsIgnoreCase(statusViagem.getDescricao());
+    }
+
     public Long getId() {
         return id;
     }

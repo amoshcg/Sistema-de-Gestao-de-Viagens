@@ -1,5 +1,6 @@
 import { Fragment, useState } from 'react';
 import AcaoGestorForm from './AcaoGestorForm.jsx';
+import DespesasPanel from './DespesasPanel.jsx';
 import {
   excluirViagem,
   submeterViagem,
@@ -30,12 +31,13 @@ function classeSituacao(descricao) {
     .replace(/(^-|-$)/g, '');
 }
 
-export default function ViagemList({ viagens, gestores, carregando, erro, aoAlterar, onEditar }) {
+export default function ViagemList({ viagens, gestores, tiposDespesa, carregando, erro, aoAlterar, onEditar }) {
   const [processando, setProcessando] = useState(null);
   const [falha, setFalha] = useState(null);
   const [historicoAberto, setHistoricoAberto] = useState(null);
   const [historico, setHistorico] = useState([]);
   const [carregandoHistorico, setCarregandoHistorico] = useState(false);
+  const [despesasAbertas, setDespesasAbertas] = useState(null);
 
   async function executar(viagem, acao) {
     setFalha(null);
@@ -66,6 +68,10 @@ export default function ViagemList({ viagens, gestores, carregando, erro, aoAlte
       return;
     }
     await executar(viagem, () => cancelarViagem(viagem.id));
+  }
+
+  function alternarDespesas(viagem) {
+    setDespesasAbertas((atual) => (atual === viagem.id ? null : viagem.id));
   }
 
   async function alternarHistorico(viagem) {
@@ -115,6 +121,7 @@ export default function ViagemList({ viagens, gestores, carregando, erro, aoAlte
               {viagens.map((viagem) => {
                 const editavel = viagem.situacaoDescricao === 'Rascunho' || viagem.situacaoDescricao === 'Ajuste solicitado';
                 const solicitada = viagem.situacaoDescricao === 'Solicitada';
+                const aprovada = viagem.situacaoDescricao === 'Aprovada';
                 const ocupado = processando === viagem.id;
                 return (
                   <Fragment key={viagem.id}>
@@ -170,7 +177,16 @@ export default function ViagemList({ viagens, gestores, carregando, erro, aoAlte
                             )}
                           </div>
                         )}
-                        {!editavel && !solicitada && <span className="aviso">—</span>}
+                        {!editavel && !solicitada && !aprovada && <span className="aviso">—</span>}
+                        {aprovada && (
+                          <button
+                            type="button"
+                            className="botao-secundario"
+                            onClick={() => alternarDespesas(viagem)}
+                          >
+                            Despesas
+                          </button>
+                        )}
                         <button
                           type="button"
                           className="botao-secundario"
@@ -196,6 +212,13 @@ export default function ViagemList({ viagens, gestores, carregando, erro, aoAlte
                               executar(viagem, () => solicitarAjusteViagem(viagem.id, { gestorId, justificativa }))
                             }
                           />
+                        </td>
+                      </tr>
+                    )}
+                    {despesasAbertas === viagem.id && (
+                      <tr>
+                        <td colSpan={8}>
+                          <DespesasPanel viagemId={viagem.id} tiposDespesa={tiposDespesa} />
                         </td>
                       </tr>
                     )}

@@ -66,6 +66,18 @@ A viagem também guarda uma fotografia da área e do cargo do empregado no
 momento em que foi criada, preservando o histórico mesmo que o empregado mude
 de área/cargo depois.
 
+## Controle financeiro (Sprint 3)
+
+Uma vez que a viagem está **Aprovada**, o colaborador pode registrar as
+despesas do deslocamento (hospedagem, alimentação, transporte, combustível,
+pedágios ou outras), informando data, tipo, descrição e valor. O sistema
+calcula automaticamente o valor total gasto e disponibiliza um resumo
+financeiro consolidado da viagem.
+
+Regras de negócio: o valor da despesa deve ser maior que zero, a data não
+pode ser futura, e viagens fora da situação Aprovada (incluindo as
+Rejeitadas) não podem receber lançamentos de despesas.
+
 ## API REST
 
 | Método | Rota                              | Descrição                                              | Respostas |
@@ -91,6 +103,10 @@ de área/cargo depois.
 | POST   | `/api/status-viagem`               | Cadastra um status de viagem                             | `201` / `400` / `409` |
 | GET    | `/api/status-viagem`               | Lista os status de viagem                                | `200` |
 | GET    | `/api/meios-transporte`            | Lista as opções de meio de transporte                    | `200` |
+| POST   | `/api/viagens/{id}/despesas`       | Registra uma despesa em uma viagem Aprovada              | `201` / `400` / `404` / `409` |
+| GET    | `/api/viagens/{id}/despesas`       | Lista as despesas lançadas na viagem                     | `200` / `404` |
+| GET    | `/api/viagens/{id}/despesas/resumo`| Resumo financeiro consolidado (total gasto + despesas)   | `200` / `404` |
+| GET    | `/api/tipos-despesa`               | Lista os tipos de despesa (Hospedagem, Alimentação etc.) | `200` |
 
 Exemplo de cadastro:
 
@@ -115,6 +131,19 @@ curl -X POST http://localhost:8080/api/viagens/1/aprovacao \
   -d '{"gestorId": 2}'
 ```
 
+Exemplo de lançamento de despesa (a viagem precisa estar Aprovada):
+
+```bash
+curl -X POST http://localhost:8080/api/viagens/1/despesas \
+  -H "Content-Type: application/json" \
+  -d '{
+    "dataDespesa": "2026-09-11",
+    "descricao": "Hotel Centro",
+    "valor": 350.00,
+    "tipoDespesaId": 1
+  }'
+```
+
 Resposta de erro de validação:
 
 ```json
@@ -135,8 +164,8 @@ As tabelas são versionadas com **Flyway**, em
 [`backend/src/main/resources/db/migration`](backend/src/main/resources/db/migration).
 As migrações rodam automaticamente na subida do backend. O modelo segue o MER
 elaborado pela equipe (`Documentacao/sprint2/MER.pdf`): tabelas `viagem`,
-`empregado`, `area`, `cargo`, `status_viagem`, `meio_transporte` e
-`viagem_status_historico`.
+`empregado`, `area`, `cargo`, `status_viagem`, `meio_transporte`,
+`viagem_status_historico`, `tipo_despesa` e `despesa`.
 
 Por segurança, as tabelas ficam em um schema dedicado (`sgv`), não no
 `public` — schema padrão e compartilhado do banco, alvo comum de ataques de
@@ -154,10 +183,11 @@ cd backend && mvn test
 ```
 
 Cobrem o cadastro e o fluxo completo de aprovação de viagens (submissão,
-cancelamento, aprovação, rejeição, ajuste e reenvio), os cadastros de apoio
-(Empregado, Área, Cargo, Status de Viagem, Meio de Transporte) e as regras de
-negócio associadas (formato de matrícula, período da viagem, restrição de
-cargo para aprovar).
+cancelamento, aprovação, rejeição, ajuste e reenvio), o registro de despesas
+em viagens Aprovadas (valor positivo, data não futura, resumo financeiro),
+os cadastros de apoio (Empregado, Área, Cargo, Status de Viagem, Meio de
+Transporte, Tipo de Despesa) e as regras de negócio associadas (formato de
+matrícula, período da viagem, restrição de cargo para aprovar).
 
 ## Estrutura
 
@@ -169,10 +199,13 @@ backend/
     area/, cargo/     # cadastros de apoio
     statusviagem/     # cadastro dos status possiveis de uma viagem
     meiotransporte/   # cadastro (somente leitura) dos meios de transporte
+    tipodespesa/      # cadastro (somente leitura) dos tipos de despesa
+    despesa/          # lancamento de despesas em viagens aprovadas (Controle Financeiro)
     common/          # tratamento de erros e configuração de CORS
   src/main/resources/db/migration/   # scripts de banco (Flyway)
 frontend/
-  src/components/    # ViagemForm/ViagemList, EmpregadoPanel, AreaPanel, CargoPanel, StatusViagemPanel, AcaoGestorForm
+  src/components/    # ViagemForm/ViagemList, EmpregadoPanel, AreaPanel, CargoPanel, StatusViagemPanel,
+                      # AcaoGestorForm, DespesasPanel, TipoDespesaPanel
   src/pages/         # uma página por cadastro/tela
   nginx.conf         # serve o build e faz proxy de /api para o backend
 docker-compose.yml

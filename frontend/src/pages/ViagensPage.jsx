@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import ViagemForm from '../components/ViagemForm.jsx';
 import ViagemList from '../components/ViagemList.jsx';
-import { listarViagens, listarEmpregados, listarMeiosTransporte } from '../api.js';
+import { listarViagens, listarEmpregados, listarMeiosTransporte, listarTiposDespesa } from '../api.js';
 
 export default function ViagensPage() {
   const [viagens, setViagens] = useState([]);
@@ -10,6 +10,7 @@ export default function ViagensPage() {
 
   const [empregados, setEmpregados] = useState([]);
   const [meiosTransporte, setMeiosTransporte] = useState([]);
+  const [tiposDespesa, setTiposDespesa] = useState([]);
 
   const [viagemEditando, setViagemEditando] = useState(null);
 
@@ -34,6 +35,7 @@ export default function ViagensPage() {
     carregarViagens();
     listarEmpregados().then(setEmpregados).catch(() => setEmpregados([]));
     listarMeiosTransporte().then(setMeiosTransporte).catch(() => setMeiosTransporte([]));
+    listarTiposDespesa().then(setTiposDespesa).catch(() => setTiposDespesa([]));
   }, [carregarViagens]);
 
   async function aoSalvarViagem() {
@@ -54,6 +56,7 @@ export default function ViagensPage() {
       <ViagemList
         viagens={viagens}
         gestores={gestores}
+        tiposDespesa={tiposDespesa}
         carregando={carregandoViagens}
         erro={erroViagens}
         aoAlterar={carregarViagens}

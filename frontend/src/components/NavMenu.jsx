@@ -7,6 +7,7 @@ const ITENS = [
   { rota: '/cargos', rotulo: 'Cargos' },
   { rota: '/meios-transporte', rotulo: 'Meios de transporte' },
   { rota: '/status-viagem', rotulo: 'Status de viagem' },
+  { rota: '/tipos-despesa', rotulo: 'Tipos de despesa' },
 ];
 
 export default function NavMenu() {
