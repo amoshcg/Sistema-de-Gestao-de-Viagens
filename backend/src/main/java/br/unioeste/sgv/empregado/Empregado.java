@@ -1,6 +1,7 @@
 package br.unioeste.sgv.empregado;
 
 import br.unioeste.sgv.area.Area;
+import br.unioeste.sgv.cargo.Cargo;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -33,14 +34,26 @@ public class Empregado {
     @JoinColumn(name = "area_id", nullable = false)
     private Area area;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "cargo_id", nullable = false)
+    private Cargo cargo;
+
     protected Empregado() {
         // exigido pelo JPA
     }
 
-    public Empregado(String matricula, String nome, Area area) {
+    public Empregado(String matricula, String nome, Area area, Cargo cargo) {
         this.matricula = matricula;
         this.nome = nome;
         this.area = area;
+        this.cargo = cargo;
+    }
+
+    /** Atualiza os dados do empregado; a matricula e imutavel apos o cadastro. */
+    public void atualizar(String nome, Area area, Cargo cargo) {
+        this.nome = nome;
+        this.area = area;
+        this.cargo = cargo;
     }
 
     public Long getId() {
@@ -57,5 +70,9 @@ public class Empregado {
 
     public Area getArea() {
         return area;
+    }
+
+    public Cargo getCargo() {
+        return cargo;
     }
 }

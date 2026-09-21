@@ -1,8 +1,11 @@
 package br.unioeste.sgv.viagem;
 
+import br.unioeste.sgv.viagem.dto.GestorAcaoRequest;
+import br.unioeste.sgv.viagem.dto.GestorJustificativaRequest;
 import br.unioeste.sgv.viagem.dto.ViagemEdicaoRequest;
 import br.unioeste.sgv.viagem.dto.ViagemRequest;
 import br.unioeste.sgv.viagem.dto.ViagemResponse;
+import br.unioeste.sgv.viagem.dto.ViagemStatusHistoricoResponse;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -56,5 +59,30 @@ public class ViagemController {
     @PostMapping("/{id}/submissao")
     public ViagemResponse submeter(@PathVariable Long id) {
         return service.submeter(id);
+    }
+
+    @PostMapping("/{id}/cancelamento")
+    public ViagemResponse cancelar(@PathVariable Long id) {
+        return service.cancelar(id);
+    }
+
+    @PostMapping("/{id}/aprovacao")
+    public ViagemResponse aprovar(@PathVariable Long id, @Valid @RequestBody GestorAcaoRequest request) {
+        return service.aprovar(id, request);
+    }
+
+    @PostMapping("/{id}/rejeicao")
+    public ViagemResponse rejeitar(@PathVariable Long id, @Valid @RequestBody GestorJustificativaRequest request) {
+        return service.rejeitar(id, request);
+    }
+
+    @PostMapping("/{id}/ajuste")
+    public ViagemResponse solicitarAjuste(@PathVariable Long id, @Valid @RequestBody GestorJustificativaRequest request) {
+        return service.solicitarAjuste(id, request);
+    }
+
+    @GetMapping("/{id}/historico")
+    public List<ViagemStatusHistoricoResponse> historico(@PathVariable Long id) {
+        return service.historico(id);
     }
 }

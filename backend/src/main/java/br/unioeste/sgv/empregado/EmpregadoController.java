@@ -1,5 +1,6 @@
 package br.unioeste.sgv.empregado;
 
+import br.unioeste.sgv.empregado.dto.EmpregadoEdicaoRequest;
 import br.unioeste.sgv.empregado.dto.EmpregadoRequest;
 import br.unioeste.sgv.empregado.dto.EmpregadoResponse;
 import jakarta.validation.Valid;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,5 +39,10 @@ public class EmpregadoController {
     @GetMapping("/{id}")
     public EmpregadoResponse buscar(@PathVariable Long id) {
         return EmpregadoResponse.de(service.buscarPorId(id));
+    }
+
+    @PutMapping("/{id}")
+    public EmpregadoResponse alterar(@PathVariable Long id, @Valid @RequestBody EmpregadoEdicaoRequest request) {
+        return service.alterar(id, request);
     }
 }

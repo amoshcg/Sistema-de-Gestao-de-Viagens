@@ -1,5 +1,14 @@
-import { useState } from 'react';
-import { excluirViagem, submeterViagem } from '../api.js';
+import { Fragment, useState } from 'react';
+import AcaoGestorForm from './AcaoGestorForm.jsx';
+import {
+  excluirViagem,
+  submeterViagem,
+  cancelarViagem,
+  aprovarViagem,
+  rejeitarViagem,
+  solicitarAjusteViagem,
+  buscarHistoricoViagem,
+} from '../api.js';
 
 /** Converte "2026-09-10" para "10/09/2026" sem depender de fuso horário. */
 function formatarData(iso) {
@@ -7,18 +16,32 @@ function formatarData(iso) {
   return `${dia}/${mes}/${ano}`;
 }
 
-export default function ViagemList({ viagens, carregando, erro, aoAlterar, onEditar }) {
+function formatarDataHora(iso) {
+  const data = new Date(iso);
+  return data.toLocaleString('pt-BR');
+}
+
+/** Transforma a descrição do status (ex.: "Ajuste solicitado") num nome de classe CSS válido. */
+function classeSituacao(descricao) {
+  const semAcentos = descricao.normalize('NFD').replace(/[̀-ͯ]/g, '');
+  return semAcentos
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+export default function ViagemList({ viagens, gestores, carregando, erro, aoAlterar, onEditar }) {
   const [processando, setProcessando] = useState(null);
   const [falha, setFalha] = useState(null);
+  const [historicoAberto, setHistoricoAberto] = useState(null);
+  const [historico, setHistorico] = useState([]);
+  const [carregandoHistorico, setCarregandoHistorico] = useState(false);
 
-  async function excluir(viagem) {
-    if (!window.confirm(`Excluir definitivamente a viagem nº ${viagem.numero} para ${viagem.destino}?`)) {
-      return;
-    }
+  async function executar(viagem, acao) {
     setFalha(null);
     setProcessando(viagem.id);
     try {
-      await excluirViagem(viagem.id);
+      await acao();
       aoAlterar();
     } catch (e) {
       setFalha(e.message);
@@ -27,16 +50,37 @@ export default function ViagemList({ viagens, carregando, erro, aoAlterar, onEdi
     }
   }
 
+  async function excluir(viagem) {
+    if (!window.confirm(`Excluir definitivamente a viagem nº ${viagem.numero} para ${viagem.destino}?`)) {
+      return;
+    }
+    await executar(viagem, () => excluirViagem(viagem.id));
+  }
+
   async function submeter(viagem) {
-    setFalha(null);
-    setProcessando(viagem.id);
+    await executar(viagem, () => submeterViagem(viagem.id));
+  }
+
+  async function cancelar(viagem) {
+    if (!window.confirm(`Cancelar a viagem nº ${viagem.numero} para ${viagem.destino}?`)) {
+      return;
+    }
+    await executar(viagem, () => cancelarViagem(viagem.id));
+  }
+
+  async function alternarHistorico(viagem) {
+    if (historicoAberto === viagem.id) {
+      setHistoricoAberto(null);
+      return;
+    }
+    setHistoricoAberto(viagem.id);
+    setCarregandoHistorico(true);
     try {
-      await submeterViagem(viagem.id);
-      aoAlterar();
+      setHistorico(await buscarHistoricoViagem(viagem.id));
     } catch (e) {
       setFalha(e.message);
     } finally {
-      setProcessando(null);
+      setCarregandoHistorico(false);
     }
   }
 
@@ -69,55 +113,116 @@ export default function ViagemList({ viagens, carregando, erro, aoAlterar, onEdi
             </thead>
             <tbody>
               {viagens.map((viagem) => {
-                const podeAlterar = viagem.situacao === 'RASCUNHO';
+                const editavel = viagem.situacaoDescricao === 'Rascunho' || viagem.situacaoDescricao === 'Ajuste solicitado';
+                const solicitada = viagem.situacaoDescricao === 'Solicitada';
                 const ocupado = processando === viagem.id;
                 return (
-                  <tr key={viagem.id}>
-                    <td className="nao-quebra">{viagem.numero}</td>
-                    <td>{viagem.destino}</td>
-                    <td className="nao-quebra">
-                      {formatarData(viagem.dataSaida)} a {formatarData(viagem.dataRetorno)}
-                    </td>
-                    <td>{viagem.motivo}</td>
-                    <td>{viagem.meioTransporteDescricao}</td>
-                    <td>
-                      {viagem.empregadoNome}
-                      <br />
-                      <small>{viagem.empregadoMatricula} — {viagem.empregadoAreaNome}</small>
-                    </td>
-                    <td>
-                      <span className={`situacao situacao-${viagem.situacao.toLowerCase()}`}>
-                        {viagem.situacaoDescricao}
-                      </span>
-                    </td>
-                    <td className="nao-quebra">
-                      {podeAlterar ? (
-                        <div className="acoes-tabela">
-                          <button type="button" onClick={() => onEditar(viagem)} disabled={ocupado}>
-                            Editar
-                          </button>
-                          <button
-                            type="button"
-                            className="botao-secundario"
-                            onClick={() => submeter(viagem)}
-                            disabled={ocupado}
-                          >
-                            Submeter
-                          </button>
-                          <button
-                            type="button"
-                            className="botao-perigo"
-                            onClick={() => excluir(viagem)}
-                            disabled={ocupado}
-                          >
-                            Excluir
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="aviso">—</span>
-                      )}
-                    </td>
-                  </tr>
+                  <Fragment key={viagem.id}>
+                    <tr>
+                      <td className="nao-quebra">{viagem.numero}</td>
+                      <td>{viagem.destino}</td>
+                      <td className="nao-quebra">
+                        {formatarData(viagem.dataSaida)} a {formatarData(viagem.dataRetorno)}
+                      </td>
+                      <td>{viagem.motivo}</td>
+                      <td>{viagem.meioTransporteDescricao}</td>
+                      <td>
+                        {viagem.empregadoNome}
+                        <br />
+                        <small>{viagem.empregadoMatricula} — {viagem.empregadoAreaNome}</small>
+                      </td>
+                      <td>
+                        <span className={`situacao situacao-${classeSituacao(viagem.situacaoDescricao)}`}>
+                          {viagem.situacaoDescricao}
+                        </span>
+                      </td>
+                      <td className="nao-quebra">
+                        {editavel && (
+                          <div className="acoes-tabela">
+                            <button type="button" onClick={() => onEditar(viagem)} disabled={ocupado}>
+                              Editar
+                            </button>
+                            <button
+                              type="button"
+                              className="botao-secundario"
+                              onClick={() => submeter(viagem)}
+                              disabled={ocupado}
+                            >
+                              {viagem.situacaoDescricao === 'Ajuste solicitado' ? 'Reenviar' : 'Submeter'}
+                            </button>
+                            <button
+                              type="button"
+                              className="botao-perigo"
+                              onClick={() => cancelar(viagem)}
+                              disabled={ocupado}
+                            >
+                              Cancelar
+                            </button>
+                            {viagem.situacaoDescricao === 'Rascunho' && (
+                              <button
+                                type="button"
+                                className="botao-perigo"
+                                onClick={() => excluir(viagem)}
+                                disabled={ocupado}
+                              >
+                                Excluir
+                              </button>
+                            )}
+                          </div>
+                        )}
+                        {!editavel && !solicitada && <span className="aviso">—</span>}
+                        <button
+                          type="button"
+                          className="botao-secundario"
+                          onClick={() => alternarHistorico(viagem)}
+                        >
+                          Histórico
+                        </button>
+                      </td>
+                    </tr>
+                    {solicitada && (
+                      <tr>
+                        <td colSpan={8}>
+                          <AcaoGestorForm
+                            gestores={gestores}
+                            ocupado={ocupado}
+                            aoAprovar={(gestorId) =>
+                              executar(viagem, () => aprovarViagem(viagem.id, { gestorId }))
+                            }
+                            aoRejeitar={(gestorId, justificativa) =>
+                              executar(viagem, () => rejeitarViagem(viagem.id, { gestorId, justificativa }))
+                            }
+                            aoAjustar={(gestorId, justificativa) =>
+                              executar(viagem, () => solicitarAjusteViagem(viagem.id, { gestorId, justificativa }))
+                            }
+                          />
+                        </td>
+                      </tr>
+                    )}
+                    {historicoAberto === viagem.id && (
+                      <tr>
+                        <td colSpan={8}>
+                          <div className="historico-viagem">
+                            {carregandoHistorico && <p className="aviso">Carregando histórico...</p>}
+                            {!carregandoHistorico && historico.length === 0 && (
+                              <p className="aviso">Sem histórico registrado.</p>
+                            )}
+                            {!carregandoHistorico && historico.length > 0 && (
+                              <ul>
+                                {historico.map((item) => (
+                                  <li key={item.id}>
+                                    <strong>{item.situacaoDescricao}</strong> em {formatarDataHora(item.dataMudanca)}
+                                    {' '}por {item.responsavelNome}
+                                    {item.justificativa && <> — "{item.justificativa}"</>}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 );
               })}
             </tbody>
