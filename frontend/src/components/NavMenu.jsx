@@ -1,0 +1,28 @@
+import { NavLink } from 'react-router-dom';
+
+const ITENS = [
+  { rota: '/dashboard', rotulo: 'Dashboard' },
+  { rota: '/viagens', rotulo: 'Viagens' },
+  { rota: '/empregados', rotulo: 'Empregados' },
+  { rota: '/areas', rotulo: 'Áreas' },
+  { rota: '/cargos', rotulo: 'Cargos' },
+  { rota: '/meios-transporte', rotulo: 'Meios de transporte' },
+  { rota: '/status-viagem', rotulo: 'Status de viagem' },
+  { rota: '/tipos-despesa', rotulo: 'Tipos de despesa' },
+];
+
+export default function NavMenu() {
+  return (
+    <nav className="menu">
+      {ITENS.map((item) => (
+        <NavLink
+          key={item.rota}
+          to={item.rota}
+          className={({ isActive }) => `menu-item${isActive ? ' menu-item-ativo' : ''}`}
+        >
+          {item.rotulo}
+        </NavLink>
+      ))}
+    </nav>
+  );
+}
