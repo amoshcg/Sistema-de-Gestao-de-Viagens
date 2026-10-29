@@ -2,9 +2,15 @@ name: build-images
 
 on:
   pull_request:
-    branches: [main]        # build only, to check the PR
+    branches: [main]
+    paths-ignore:
+      - "deploy/**"
+      - "ops/**"
   push:
-    branches: [main]        # build and publish after merge
+    branches: [main]
+    paths-ignore:
+      - "deploy/**"
+      - "ops/**"
   workflow_dispatch:
 
 permissions:
