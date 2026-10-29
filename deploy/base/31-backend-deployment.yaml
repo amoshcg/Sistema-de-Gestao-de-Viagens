@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: sgv
+    component: backend
+  name: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sgv
+      component: backend
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: sgv
+        component: backend
+    spec:
+      terminationGracePeriodSeconds: 45
+      containers:
+      - env:
+        - name: SPRING_DATASOURCE_URL
+          value: jdbc:postgresql://postgres:5432/sgv_db
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              key: API_DB_USER
+              name: sgv-db
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: API_DB_PASSWORD
+              name: sgv-db
+        - name: JAVA_TOOL_OPTIONS
+          value: -XX:MaxRAMPercentage=60 -XX:+UseSerialGC
+        - name: SERVER_SHUTDOWN
+          value: graceful
+        image: ghcr.io/amoshcg/sgv-backend:c00f1988863ff7901b71a21e40c4408236fe15d6
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - sleep
+              - "10"
+        livenessProbe:
+          failureThreshold: 3
+          periodSeconds: 20
+          tcpSocket:
+            port: http
+        name: backend
+        ports:
+        - containerPort: 8080
+          name: http
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /api/status-viagem
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+        resources:
+          limits:
+            memory: 640Mi
+          requests:
+            cpu: 100m
+            memory: 384Mi
+        startupProbe:
+          failureThreshold: 36
+          periodSeconds: 5
+          tcpSocket:
+            port: http
+      topologySpreadConstraints:
+      - labelSelector:
+          matchLabels:
+            app: sgv
+            component: backend
+        maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
