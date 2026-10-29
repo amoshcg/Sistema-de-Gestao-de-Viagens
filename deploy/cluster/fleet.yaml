@@ -1,0 +1,4 @@
+# Cluster-scoped objects shared by all SGV environments.
+helm:
+  releaseName: sgv-cluster
+  takeOwnership: true

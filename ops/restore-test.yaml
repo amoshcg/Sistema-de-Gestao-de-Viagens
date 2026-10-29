@@ -1,0 +1,48 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: restore-test
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: restore
+          image: postgres:15-alpine
+          env:
+            - name: PGHOST
+              value: postgres
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: sgv-db
+                  key: POSTGRES_USER
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sgv-db
+                  key: POSTGRES_PASSWORD
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -e
+              LATEST=$(ls -t /backups/sgv_db-*.dump | head -1)
+              echo "Restoring $LATEST"
+              dropdb --if-exists restore_test
+              createdb restore_test
+              pg_restore --no-owner -d restore_test "$LATEST"
+              psql -d restore_test -c "SELECT count(*) AS viagens FROM sgv.viagem" \
+                                   -c "SELECT count(*) AS empregados FROM sgv.empregado"
+              dropdb restore_test
+              echo "Restore test OK"
+          volumeMounts:
+            - name: backups
+              mountPath: /backups
+              readOnly: true
+      volumes:
+        - name: backups
+          nfs:
+            server: 192.168.88.2
+            path: /srv/backups/sgv-db

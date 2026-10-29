@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    app: sgv
+    component: database
+spec:
+  clusterIP: None          # "headless": DNS points straight at the pod
+  selector:
+    app: sgv
+    component: database
+  ports:
+    - name: postgres
+      port: 5432

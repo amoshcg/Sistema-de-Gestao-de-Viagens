@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  labels:
+    app: sgv
+    component: frontend
+spec:
+  selector:
+    app: sgv
+    component: frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000

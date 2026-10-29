@@ -1,0 +1,60 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  labels:
+    app: sgv
+    component: backup
+spec:
+  schedule: "30 2 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: sgv
+            component: backup
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: pg-dump
+              image: postgres:15-alpine
+              env:
+                - name: PGHOST
+                  value: postgres
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef:
+                      name: sgv-db
+                      key: POSTGRES_USER
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: sgv-db
+                      key: POSTGRES_PASSWORD
+              command: ["sh", "-c"]
+              args:
+                - |
+                  set -e
+                  FILE=/backups/sgv_db-$(date +%Y%m%d-%H%M%S).dump
+                  pg_dump -d sgv_db -Fc -f "$FILE"
+                  echo "Backup written: $FILE ($(du -h "$FILE" | cut -f1))"
+                  find /backups -name 'sgv_db-*.dump' -mtime +7 -delete
+              volumeMounts:
+                - name: backups
+                  mountPath: /backups
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 64Mi
+                limits:
+                  memory: 256Mi
+          volumes:
+            - name: backups
+              nfs:
+                server: 192.168.88.2
+                path: /srv/backups/sgv-db

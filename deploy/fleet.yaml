@@ -1,0 +1,8 @@
+# Fleet bundle for the SGV production environment.
+defaultNamespace: sgv-prod
+kustomize:
+  dir: overlays/prod
+helm:
+  releaseName: sgv-prod
+  # The resources were first created with kubectl; let Fleet adopt them.
+  takeOwnership: true
