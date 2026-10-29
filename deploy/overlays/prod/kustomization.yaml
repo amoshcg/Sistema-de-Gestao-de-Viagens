@@ -5,6 +5,6 @@ resources:
   - ../../base
 images:
   - name: ghcr.io/amoshcg/sgv-backend
-    newTag: c00f1988863ff7901b71a21e40c4408236fe15d6
+    newTag: f130c912769c46d189542ff5aea12fbda23d730f
   - name: ghcr.io/amoshcg/sgv-frontend
-    newTag: c00f1988863ff7901b71a21e40c4408236fe15d6
+    newTag: f130c912769c46d189542ff5aea12fbda23d730f
